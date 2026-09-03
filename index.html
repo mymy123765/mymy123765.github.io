@@ -1,90 +1,524 @@
+```html
 <!doctype html>
 <html lang="vi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<title>YouTube Multiview — tối đa 4 video</title>
-<style>
-:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#0f0f0f;color:#eee}
-header{padding:16px 20px;border-bottom:1px solid #292929;background:#181818}
-h1{margin:0 0 12px;font-size:20px}.controls{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:8px;max-width:1500px}
-input,select,button{font:inherit;border-radius:6px;border:1px solid #444}
-input{width:100%;padding:10px;background:#101010;color:#fff}button,select{padding:9px 12px;background:#252525;color:#fff;cursor:pointer}
-button:hover{background:#333}.primary{background:#cc0000;border-color:#cc0000}.primary:hover{background:#e00000}
-.row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}.hint{color:#aaa;font-size:13px;margin-top:8px}
-#grid{padding:12px;display:grid;gap:10px;height:calc(100vh - 150px);grid-template-columns:repeat(2,minmax(0,1fr))}
-.slot{position:relative;background:#000;border:1px solid #292929;border-radius:8px;overflow:hidden;min-height:0}
-.slot.empty{display:grid;place-items:center;color:#666;font-size:15px}iframe{width:100%;height:100%;border:0;display:block}
-.remove{position:absolute;z-index:2;right:6px;top:6px;padding:4px 8px;background:rgba(0,0,0,.75);border-color:#555}
-@media(max-width:800px){.controls{grid-template-columns:1fr}#grid{height:auto;min-height:calc(100vh - 250px);grid-template-columns:1fr}.slot{aspect-ratio:16/9}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <title>YouTube Multiview — tối đa 4 video</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Arial, sans-serif;
+      background: #0f0f0f;
+      color: #eee;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #292929;
+      background: #181818;
+      flex: 0 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 8px;
+      max-width: 1500px;
+    }
+
+    input,
+    select,
+    button {
+      font: inherit;
+      border-radius: 6px;
+      border: 1px solid #444;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      background: #101010;
+      color: #fff;
+    }
+
+    input:focus,
+    select:focus,
+    button:focus {
+      outline: 2px solid #666;
+      outline-offset: 1px;
+    }
+
+    button,
+    select {
+      padding: 9px 12px;
+      background: #252525;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #333;
+    }
+
+    .primary {
+      background: #cc0000;
+      border-color: #cc0000;
+    }
+
+    .primary:hover {
+      background: #e00000;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hint {
+      color: #aaa;
+      font-size: 13px;
+      margin-top: 8px;
+      line-height: 1.45;
+    }
+
+    #grid {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .slot {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      background: #000;
+      border: 1px solid #292929;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .slot.empty {
+      display: grid;
+      place-items: center;
+      color: #666;
+      font-size: 15px;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: #000;
+    }
+
+    .remove {
+      position: absolute;
+      z-index: 2;
+      right: 6px;
+      top: 6px;
+      padding: 4px 8px;
+      background: rgba(0, 0, 0, 0.75);
+      border-color: #555;
+      line-height: 1;
+    }
+
+    .remove:hover {
+      background: rgba(50, 50, 50, 0.9);
+    }
+
+    @media (max-width: 1000px) {
+      .controls {
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+      }
+    }
+
+    @media (max-width: 800px) {
+      header {
+        padding: 14px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      #grid {
+        min-height: 0;
+        height: auto;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: none !important;
+      }
+
+      .slot {
+        aspect-ratio: 16 / 9;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<header>
-<h1>YouTube Multiview — tối đa 4 video</h1>
-<div class="controls">
-<input id="url1" placeholder="Video 1 — dán link YouTube">
-<input id="url2" placeholder="Video 2 — dán link YouTube">
-<input id="url3" placeholder="Video 3 — dán link YouTube">
-<input id="url4" placeholder="Video 4 — dán link YouTube">
-</div>
-<div class="row">
-<label>Số khung:
-<select id="count"><option>1</option><option>2</option><option>3</option><option selected>4</option></select>
-</label>
-<button class="primary" id="load">Tải Multiview</button>
-<button id="clear">Xóa tất cả</button>
-<button id="muteAll">Tắt tiếng tất cả</button>
-</div>
-<div class="hint">Bản này phải được mở qua http://localhost:8765/ — không mở trực tiếp bằng file:/// vì YouTube yêu cầu HTTP Referer cho embedded player. Hỗ trợ watch, youtu.be, live và shorts.</div>
-</header>
-<main id="grid"></main>
-<script>
-(function(){
-const grid=document.getElementById('grid'),count=document.getElementById('count');
-function getVideoId(value){
- if(!value)return null; value=value.trim();
- if(/^[A-Za-z0-9_-]{11}$/.test(value))return value;
- try{
-  const u=new URL(value);
-  if(u.hostname==='youtu.be'||u.hostname.endsWith('.youtu.be'))return u.pathname.split('/').filter(Boolean)[0]||null;
-  if(u.hostname.includes('youtube.com')){
-   if(u.searchParams.get('v'))return u.searchParams.get('v');
-   const p=u.pathname.split('/').filter(Boolean),i=p.findIndex(x=>['embed','shorts','live'].includes(x));
-   if(i>=0&&p[i+1])return p[i+1];
-  }
- }catch(e){}
- return null;
-}
-function render(){
- const n=Number(count.value);grid.innerHTML='';
- grid.style.gridTemplateColumns=n===1?'1fr':'repeat(2,minmax(0,1fr))';
- for(let i=1;i<=n;i++){
-  const slot=document.createElement('section');slot.className='slot';
-  const id=getVideoId(document.getElementById('url'+i).value);
-  if(!id){slot.classList.add('empty');slot.textContent='Khung '+i+' — chưa có video';}
-  else{
-   const iframe=document.createElement('iframe');
-   const origin=location.origin;
-   iframe.src='https://www.youtube.com/embed/'+encodeURIComponent(id)+'?autoplay=1&rel=0&playsinline=1&enablejsapi=1&origin='+encodeURIComponent(origin);
-   iframe.referrerPolicy='strict-origin-when-cross-origin';
-   iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-   iframe.allowFullscreen=true;
-   const remove=document.createElement('button');remove.className='remove';remove.textContent='×';remove.title='Xóa video này';
-   remove.onclick=()=>{document.getElementById('url'+i).value='';render()};
-   slot.append(iframe,remove);
-  }
-  grid.appendChild(slot);
- }
-}
-document.getElementById('load').onclick=render;
-document.getElementById('clear').onclick=()=>{for(let i=1;i<=4;i++)document.getElementById('url'+i).value='';render()};
-document.getElementById('muteAll').onclick=()=>grid.querySelectorAll('iframe').forEach(f=>f.contentWindow.postMessage(JSON.stringify({event:'command',func:'mute',args:[]}), '*'));
-count.onchange=render;
-for(let i=1;i<=4;i++)document.getElementById('url'+i).addEventListener('keydown',e=>{if(e.key==='Enter')render()});
-render();
-})();
-</script>
+  <header>
+    <h1>YouTube Multiview — tối đa 4 video</h1>
+
+    <div class="controls">
+      <input id="url1" placeholder="Video 1 — dán link YouTube">
+      <input id="url2" placeholder="Video 2 — dán link YouTube">
+      <input id="url3" placeholder="Video 3 — dán link YouTube">
+      <input id="url4" placeholder="Video 4 — dán link YouTube">
+    </div>
+
+    <div class="row">
+      <label>
+        Số khung:
+        <select id="count">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+        </select>
+      </label>
+
+      <button class="primary" id="load">Tải Multiview</button>
+      <button id="clear">Xóa tất cả</button>
+      <button id="muteAll">Tắt tiếng tất cả</button>
+    </div>
+
+    <div class="hint">
+      Mở trang qua HTTP, ví dụ
+      <strong>http://localhost:8765/</strong>
+      thay vì mở trực tiếp bằng <strong>file:///</strong>.
+      Hỗ trợ URL watch, youtu.be, live, shorts và cả ID video 11 ký tự.
+      Video YouTube phải cho phép embedding thì mới hiển thị được.
+    </div>
+  </header>
+
+  <main id="grid"></main>
+
+  <script>
+    (() => {
+      const grid = document.getElementById('grid');
+      const count = document.getElementById('count');
+      const loadButton = document.getElementById('load');
+      const clearButton = document.getElementById('clear');
+      const muteAllButton = document.getElementById('muteAll');
+
+      const MAX_VIDEOS = 4;
+      const YOUTUBE_ORIGIN = 'https://www.youtube.com';
+
+      let allMuted = true;
+
+      /**
+       * Kiểm tra video ID có đúng định dạng thông thường của YouTube hay không.
+       */
+      function isValidVideoId(id) {
+        return /^[A-Za-z0-9_-]{11}$/.test(id);
+      }
+
+      /**
+       * Lấy YouTube video ID từ:
+       * - ID trực tiếp
+       * - youtube.com/watch?v=...
+       * - youtu.be/...
+       * - youtube.com/embed/...
+       * - youtube.com/shorts/...
+       * - youtube.com/live/...
+       */
+      function getVideoId(value) {
+        if (!value) {
+          return null;
+        }
+
+        value = value.trim();
+
+        // Người dùng dán thẳng video ID
+        if (isValidVideoId(value)) {
+          return value;
+        }
+
+        try {
+          const url = new URL(value);
+          const hostname = url.hostname.toLowerCase();
+
+          // youtu.be/VIDEO_ID
+          if (
+            hostname === 'youtu.be' ||
+            hostname.endsWith('.youtu.be')
+          ) {
+            const id = url.pathname
+              .split('/')
+              .filter(Boolean)[0];
+
+            return isValidVideoId(id) ? id : null;
+          }
+
+          // youtube.com/...
+          if (
+            hostname === 'youtube.com' ||
+            hostname.endsWith('.youtube.com')
+          ) {
+            // /watch?v=VIDEO_ID
+            const watchId = url.searchParams.get('v');
+
+            if (watchId) {
+              return isValidVideoId(watchId) ? watchId : null;
+            }
+
+            // /embed/VIDEO_ID
+            // /shorts/VIDEO_ID
+            // /live/VIDEO_ID
+            const parts = url.pathname
+              .split('/')
+              .filter(Boolean);
+
+            const supportedTypes = ['embed', 'shorts', 'live'];
+
+            const typeIndex = parts.findIndex(
+              part => supportedTypes.includes(part.toLowerCase())
+            );
+
+            if (typeIndex >= 0 && parts[typeIndex + 1]) {
+              const id = parts[typeIndex + 1];
+
+              return isValidVideoId(id) ? id : null;
+            }
+          }
+        } catch (error) {
+          // URL không hợp lệ -> trả null
+        }
+
+        return null;
+      }
+
+      /**
+       * Gửi command cho YouTube iframe player.
+       */
+      function sendYouTubeCommand(iframe, func) {
+        if (!iframe || !iframe.contentWindow) {
+          return;
+        }
+
+        iframe.contentWindow.postMessage(
+          JSON.stringify({
+            event: 'command',
+            func,
+            args: []
+          }),
+          YOUTUBE_ORIGIN
+        );
+      }
+
+      /**
+       * Xóa một URL rồi dồn các URL phía sau lên.
+       *
+       * Ví dụ:
+       * V1 / V2 / V3 / V4
+       * xóa V2
+       * => V1 / V3 / V4 / trống
+       */
+      function removeVideo(index) {
+        const values = [];
+
+        for (let i = 1; i <= MAX_VIDEOS; i++) {
+          const input = document.getElementById(`url${i}`);
+
+          if (input && input.value.trim()) {
+            values.push(input.value.trim());
+          }
+        }
+
+        values.splice(index - 1, 1);
+
+        for (let i = 1; i <= MAX_VIDEOS; i++) {
+          const input = document.getElementById(`url${i}`);
+
+          if (input) {
+            input.value = values[i - 1] || '';
+          }
+        }
+
+        render();
+      }
+
+      /**
+       * Render toàn bộ Multiview.
+       */
+      function render() {
+        const n = Math.max(
+          1,
+          Math.min(MAX_VIDEOS, Number(count.value) || 1)
+        );
+
+        grid.innerHTML = '';
+
+        // Layout:
+        // 1 video = 1 cột
+        // 2-4 video = 2 cột
+        grid.style.gridTemplateColumns =
+          n === 1
+            ? '1fr'
+            : 'repeat(2, minmax(0, 1fr))';
+
+        // 3-4 video dùng tối đa 2 hàng.
+        grid.style.gridTemplateRows =
+          n <= 2
+            ? '1fr'
+            : 'repeat(2, minmax(0, 1fr))';
+
+        for (let i = 1; i <= n; i++) {
+          const slot = document.createElement('section');
+          slot.className = 'slot';
+
+          const input = document.getElementById(`url${i}`);
+          const id = getVideoId(input ? input.value : '');
+
+          if (!id) {
+            slot.classList.add('empty');
+            slot.textContent = `Khung ${i} — chưa có video`;
+            grid.appendChild(slot);
+            continue;
+          }
+
+          const iframe = document.createElement('iframe');
+
+          const params = new URLSearchParams({
+            autoplay: '1',
+            mute: '1',
+            rel: '0',
+            playsinline: '1',
+            enablejsapi: '1',
+            origin: window.location.origin
+          });
+
+          iframe.src =
+            `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(id)}?${params.toString()}`;
+
+          iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+
+          iframe.allow =
+            'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+
+          iframe.allowFullscreen = true;
+          iframe.title = `YouTube video ${i}`;
+
+          // loading="eager" vì mục tiêu của trang là mở Multiview ngay.
+          iframe.loading = 'eager';
+
+          const removeButton = document.createElement('button');
+          removeButton.className = 'remove';
+          removeButton.type = 'button';
+          removeButton.textContent = '×';
+          removeButton.title = `Xóa video ${i}`;
+          removeButton.setAttribute('aria-label', `Xóa video ${i}`);
+
+          removeButton.addEventListener('click', () => {
+            removeVideo(i);
+          });
+
+          slot.appendChild(iframe);
+          slot.appendChild(removeButton);
+          grid.appendChild(slot);
+        }
+
+        // Các slot còn thiếu trong layout chỉ xuất hiện khi người dùng chọn
+        // số khung lớn hơn số video thực tế. Điều này được xử lý ở trên bằng
+        // slot.empty, không tạo iframe giả.
+      }
+
+      /**
+       * Mute/unmute tất cả iframe.
+       *
+       * Lưu ý:
+       * YouTube iframe phải có enablejsapi=1 mới nhận command này.
+       */
+      function toggleMuteAll() {
+        const iframes = grid.querySelectorAll('iframe');
+
+        allMuted = !allMuted;
+
+        iframes.forEach(iframe => {
+          sendYouTubeCommand(
+            iframe,
+            allMuted ? 'mute' : 'unMute'
+          );
+        });
+
+        muteAllButton.textContent = allMuted
+          ? 'Bật tiếng tất cả'
+          : 'Tắt tiếng tất cả';
+      }
+
+      /**
+       * Xóa toàn bộ input.
+       */
+      function clearAll() {
+        for (let i = 1; i <= MAX_VIDEOS; i++) {
+          const input = document.getElementById(`url${i}`);
+
+          if (input) {
+            input.value = '';
+          }
+        }
+
+        allMuted = true;
+        muteAllButton.textContent = 'Tắt tiếng tất cả';
+
+        render();
+      }
+
+      loadButton.addEventListener('click', render);
+      clearButton.addEventListener('click', clearAll);
+      muteAllButton.addEventListener('click', toggleMuteAll);
+
+      count.addEventListener('change', render);
+
+      // Enter trong bất kỳ ô URL nào = tải Multiview.
+      for (let i = 1; i <= MAX_VIDEOS; i++) {
+        const input = document.getElementById(`url${i}`);
+
+        input.addEventListener('keydown', event => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            render();
+          }
+        });
+      }
+
+      // Render trạng thái ban đầu.
+      render();
+    })();
+  </script>
 </body>
 </html>
+```
