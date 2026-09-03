@@ -1,10 +1,10 @@
-```html
 <!doctype html>
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#0f0f0f">
 
   <title>YouTube Multiview — tối đa 4 video</title>
 
@@ -20,6 +20,7 @@
     html,
     body {
       margin: 0;
+      width: 100%;
       min-height: 100%;
       font-family: Arial, sans-serif;
       background: #0f0f0f;
@@ -28,27 +29,97 @@
 
     body {
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
-    header {
-      padding: 16px 20px;
-      border-bottom: 1px solid #292929;
-      background: #181818;
+    /* =========================
+       TOP BAR
+       ========================= */
+
+    #header {
       flex: 0 0 auto;
+      background: #181818;
+      border-bottom: 1px solid #292929;
+      z-index: 20;
+    }
+
+    .topbar {
+      min-height: 48px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: max(6px, env(safe-area-inset-top));
     }
 
     h1 {
-      margin: 0 0 12px;
-      font-size: 20px;
+      margin: 0;
+      min-width: 0;
+      font-size: 17px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    /* =========================
+       CONTROLS PANEL
+       ========================= */
+
+    .controls-panel {
+      max-height: 300px;
+      padding: 0 10px 10px;
+      overflow: hidden;
+      opacity: 1;
+      visibility: visible;
+
+      transition:
+        max-height 180ms ease,
+        opacity 120ms ease,
+        padding 180ms ease,
+        visibility 0s linear 0s;
+    }
+
+    .controls-panel.collapsed {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        max-height 180ms ease,
+        opacity 120ms ease,
+        padding 180ms ease,
+        visibility 0s linear 180ms;
     }
 
     .controls {
       display: grid;
-      grid-template-columns: repeat(4, minmax(180px, 1fr));
-      gap: 8px;
-      max-width: 1500px;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 6px;
+      width: 100%;
+    }
+
+    .row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 7px;
+      flex-wrap: wrap;
+    }
+
+    .hint {
+      display: none;
     }
 
     input,
@@ -61,21 +132,19 @@
 
     input {
       width: 100%;
-      padding: 10px;
+      min-width: 0;
+      padding: 8px 10px;
       background: #101010;
       color: #fff;
     }
 
-    input:focus,
-    select:focus,
-    button:focus {
-      outline: 2px solid #666;
-      outline-offset: 1px;
+    input::placeholder {
+      color: #7a7a7a;
     }
 
     button,
     select {
-      padding: 9px 12px;
+      padding: 7px 10px;
       background: #252525;
       color: #fff;
       cursor: pointer;
@@ -83,6 +152,15 @@
 
     button:hover {
       background: #333;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .primary {
@@ -94,29 +172,32 @@
       background: #e00000;
     }
 
-    .row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-top: 10px;
-      flex-wrap: wrap;
+    input:focus,
+    select:focus,
+    button:focus-visible {
+      outline: 2px solid #888;
+      outline-offset: 1px;
     }
 
-    .hint {
-      color: #aaa;
-      font-size: 13px;
-      margin-top: 8px;
-      line-height: 1.45;
-    }
+    /* =========================
+       VIDEO GRID
+       ========================= */
 
     #grid {
       flex: 1 1 auto;
+      min-width: 0;
       min-height: 0;
-      padding: 12px;
+      width: 100%;
+      height: auto;
+
+      padding: 6px;
       display: grid;
-      gap: 10px;
+      gap: 6px;
+
       grid-template-columns: 1fr;
       grid-template-rows: 1fr;
+
+      background: #0f0f0f;
     }
 
     .slot {
@@ -125,7 +206,7 @@
       min-height: 0;
       background: #000;
       border: 1px solid #292929;
-      border-radius: 8px;
+      border-radius: 6px;
       overflow: hidden;
     }
 
@@ -133,7 +214,7 @@
       display: grid;
       place-items: center;
       color: #666;
-      font-size: 15px;
+      font-size: 14px;
     }
 
     iframe {
@@ -144,87 +225,281 @@
       background: #000;
     }
 
+    /* =========================
+       REMOVE BUTTON
+       ========================= */
+
     .remove {
       position: absolute;
       z-index: 2;
-      right: 6px;
-      top: 6px;
-      padding: 4px 8px;
-      background: rgba(0, 0, 0, 0.75);
+      right: 5px;
+      top: 5px;
+
+      width: 30px;
+      height: 30px;
+      padding: 0;
+
+      display: grid;
+      place-items: center;
+
+      background: rgba(0, 0, 0, 0.72);
       border-color: #555;
       line-height: 1;
+      font-size: 18px;
     }
 
     .remove:hover {
-      background: rgba(50, 50, 50, 0.9);
+      background: rgba(50, 50, 50, 0.92);
     }
+
+    /* =========================
+       FULLSCREEN
+       ========================= */
+
+    #exitFullscreen {
+      position: fixed;
+      z-index: 100;
+
+      right: max(10px, env(safe-area-inset-right));
+      bottom: max(10px, env(safe-area-inset-bottom));
+
+      display: none;
+
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.78);
+      border-color: #555;
+      backdrop-filter: blur(8px);
+    }
+
+    body.is-fullscreen #header {
+      display: none;
+    }
+
+    body.is-fullscreen #grid {
+      width: 100vw;
+      height: 100dvh;
+      padding: 0;
+      gap: 2px;
+    }
+
+    body.is-fullscreen #exitFullscreen {
+      display: block;
+    }
+
+    /* =========================
+       TABLET
+       ========================= */
 
     @media (max-width: 1000px) {
       .controls {
-        grid-template-columns: repeat(2, minmax(180px, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
-    @media (max-width: 800px) {
-      header {
-        padding: 14px;
+    /* =========================
+       MOBILE
+       ========================= */
+
+    @media (max-width: 700px) {
+      .topbar {
+        min-height: 44px;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      h1 {
+        font-size: 15px;
+      }
+
+      .topbar-actions {
+        gap: 4px;
+      }
+
+      .topbar-actions button {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+
+      .controls-panel {
+        padding-left: 8px;
+        padding-right: 8px;
       }
 
       .controls {
         grid-template-columns: 1fr;
       }
 
+      .row {
+        margin-top: 6px;
+      }
+
       #grid {
-        min-height: 0;
-        height: auto;
+        padding: 4px;
+        gap: 4px;
+
         grid-template-columns: 1fr !important;
         grid-template-rows: none !important;
+
+        overflow-y: auto;
+        overflow-x: hidden;
+        align-content: start;
       }
 
       .slot {
         aspect-ratio: 16 / 9;
+        border-radius: 4px;
+      }
+    }
+
+    /* =========================
+       VERY SMALL PHONES
+       ========================= */
+
+    @media (max-width: 420px) {
+      .topbar-actions button {
+        font-size: 11px;
+      }
+
+      #grid {
+        padding: 2px;
+        gap: 2px;
+      }
+
+      .remove {
+        width: 28px;
+        height: 28px;
+      }
+    }
+
+    /* =========================
+       REDUCED MOTION
+       ========================= */
+
+    @media (prefers-reduced-motion: reduce) {
+      .controls-panel {
+        transition: none;
+      }
+    }
+
+    /* =========================
+       LANDSCAPE MOBILE
+       ========================= */
+
+    @media (max-width: 900px) and (orientation: landscape) {
+      #grid {
+        padding: 2px;
+        gap: 2px;
+      }
+
+      .topbar {
+        min-height: 40px;
+      }
+
+      h1 {
+        font-size: 14px;
       }
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <h1>YouTube Multiview — tối đa 4 video</h1>
+  <header id="header">
+    <div class="topbar">
+      <h1>YouTube Multiview</h1>
 
-    <div class="controls">
-      <input id="url1" placeholder="Video 1 — dán link YouTube">
-      <input id="url2" placeholder="Video 2 — dán link YouTube">
-      <input id="url3" placeholder="Video 3 — dán link YouTube">
-      <input id="url4" placeholder="Video 4 — dán link YouTube">
+      <div class="topbar-actions">
+        <button
+          id="toggleControls"
+          type="button"
+          aria-expanded="false"
+          aria-controls="controlsPanel"
+        >
+          Điều khiển
+        </button>
+
+        <button
+          id="fullscreenButton"
+          type="button"
+        >
+          Toàn màn hình
+        </button>
+      </div>
     </div>
 
-    <div class="row">
-      <label>
-        Số khung:
-        <select id="count">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4" selected>4</option>
-        </select>
-      </label>
+    <div
+      id="controlsPanel"
+      class="controls-panel collapsed"
+    >
+      <div class="controls">
+        <input
+          id="url1"
+          placeholder="Video 1 — dán link YouTube"
+          autocomplete="off"
+          spellcheck="false"
+        >
 
-      <button class="primary" id="load">Tải Multiview</button>
-      <button id="clear">Xóa tất cả</button>
-      <button id="muteAll">Tắt tiếng tất cả</button>
-    </div>
+        <input
+          id="url2"
+          placeholder="Video 2 — dán link YouTube"
+          autocomplete="off"
+          spellcheck="false"
+        >
 
-    <div class="hint">
-      Mở trang qua HTTP, ví dụ
-      <strong>http://localhost:8765/</strong>
-      thay vì mở trực tiếp bằng <strong>file:///</strong>.
-      Hỗ trợ URL watch, youtu.be, live, shorts và cả ID video 11 ký tự.
-      Video YouTube phải cho phép embedding thì mới hiển thị được.
+        <input
+          id="url3"
+          placeholder="Video 3 — dán link YouTube"
+          autocomplete="off"
+          spellcheck="false"
+        >
+
+        <input
+          id="url4"
+          placeholder="Video 4 — dán link YouTube"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </div>
+
+      <div class="row">
+        <label>
+          Số khung:
+          <select id="count">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+          </select>
+        </label>
+
+        <button class="primary" id="load" type="button">
+          Tải Multiview
+        </button>
+
+        <button id="clear" type="button">
+          Xóa tất cả
+        </button>
+
+        <button id="muteAll" type="button">
+          Tắt tiếng tất cả
+        </button>
+      </div>
+
+      <div class="hint">
+        Hỗ trợ URL watch, youtu.be, live, shorts và ID video 11 ký tự.
+        Video YouTube phải cho phép embedding.
+      </div>
     </div>
   </header>
 
-  <main id="grid"></main>
+  <main id="grid" aria-label="YouTube Multiview"></main>
+
+  <button
+    id="exitFullscreen"
+    type="button"
+    aria-label="Thoát toàn màn hình"
+  >
+    Thoát toàn màn hình
+  </button>
 
   <script>
     (() => {
@@ -234,26 +509,38 @@
       const clearButton = document.getElementById('clear');
       const muteAllButton = document.getElementById('muteAll');
 
+      const controlsPanel = document.getElementById('controlsPanel');
+      const toggleControlsButton =
+        document.getElementById('toggleControls');
+
+      const fullscreenButton =
+        document.getElementById('fullscreenButton');
+
+      const exitFullscreenButton =
+        document.getElementById('exitFullscreen');
+
       const MAX_VIDEOS = 4;
       const YOUTUBE_ORIGIN = 'https://www.youtube.com';
 
       let allMuted = true;
+      let controlsVisible = false;
 
       /**
-       * Kiểm tra video ID có đúng định dạng thông thường của YouTube hay không.
+       * Validate YouTube video ID.
        */
       function isValidVideoId(id) {
-        return /^[A-Za-z0-9_-]{11}$/.test(id);
+        return typeof id === 'string' &&
+          /^[A-Za-z0-9_-]{11}$/.test(id);
       }
 
       /**
-       * Lấy YouTube video ID từ:
-       * - ID trực tiếp
-       * - youtube.com/watch?v=...
-       * - youtu.be/...
-       * - youtube.com/embed/...
-       * - youtube.com/shorts/...
-       * - youtube.com/live/...
+       * Extract a YouTube video ID from:
+       * - youtube.com/watch?v=VIDEO_ID
+       * - youtu.be/VIDEO_ID
+       * - youtube.com/embed/VIDEO_ID
+       * - youtube.com/shorts/VIDEO_ID
+       * - youtube.com/live/VIDEO_ID
+       * - Direct 11-character video ID
        */
       function getVideoId(value) {
         if (!value) {
@@ -262,7 +549,6 @@
 
         value = value.trim();
 
-        // Người dùng dán thẳng video ID
         if (isValidVideoId(value)) {
           return value;
         }
@@ -292,7 +578,9 @@
             const watchId = url.searchParams.get('v');
 
             if (watchId) {
-              return isValidVideoId(watchId) ? watchId : null;
+              return isValidVideoId(watchId)
+                ? watchId
+                : null;
             }
 
             // /embed/VIDEO_ID
@@ -302,27 +590,81 @@
               .split('/')
               .filter(Boolean);
 
-            const supportedTypes = ['embed', 'shorts', 'live'];
+            const supportedTypes = [
+              'embed',
+              'shorts',
+              'live'
+            ];
 
             const typeIndex = parts.findIndex(
-              part => supportedTypes.includes(part.toLowerCase())
+              part =>
+                supportedTypes.includes(part.toLowerCase())
             );
 
-            if (typeIndex >= 0 && parts[typeIndex + 1]) {
+            if (
+              typeIndex >= 0 &&
+              parts[typeIndex + 1]
+            ) {
               const id = parts[typeIndex + 1];
 
-              return isValidVideoId(id) ? id : null;
+              return isValidVideoId(id)
+                ? id
+                : null;
             }
           }
-        } catch (error) {
-          // URL không hợp lệ -> trả null
+        } catch {
+          return null;
         }
 
         return null;
       }
 
       /**
-       * Gửi command cho YouTube iframe player.
+       * Return all four current URL values.
+       */
+      function getInputValues() {
+        return Array.from(
+          { length: MAX_VIDEOS },
+          (_, index) => {
+            const input =
+              document.getElementById(`url${index + 1}`);
+
+            return input ? input.value.trim() : '';
+          }
+        );
+      }
+
+      /**
+       * Check whether at least one video URL exists.
+       */
+      function hasAnyVideoInput() {
+        return getInputValues().some(Boolean);
+      }
+
+      /**
+       * Show/hide the control panel.
+       */
+      function setControlsVisible(visible) {
+        controlsVisible = Boolean(visible);
+
+        controlsPanel.classList.toggle(
+          'collapsed',
+          !controlsVisible
+        );
+
+        toggleControlsButton.textContent =
+          controlsVisible
+            ? 'Ẩn điều khiển'
+            : 'Điều khiển';
+
+        toggleControlsButton.setAttribute(
+          'aria-expanded',
+          String(controlsVisible)
+        );
+      }
+
+      /**
+       * Send a command to a YouTube iframe player.
        */
       function sendYouTubeCommand(iframe, func) {
         if (!iframe || !iframe.contentWindow) {
@@ -340,31 +682,24 @@
       }
 
       /**
-       * Xóa một URL rồi dồn các URL phía sau lên.
-       *
-       * Ví dụ:
-       * V1 / V2 / V3 / V4
-       * xóa V2
-       * => V1 / V3 / V4 / trống
+       * Remove one video input and compact the remaining URLs.
        */
       function removeVideo(index) {
-        const values = [];
+        const values = getInputValues();
 
-        for (let i = 1; i <= MAX_VIDEOS; i++) {
-          const input = document.getElementById(`url${i}`);
-
-          if (input && input.value.trim()) {
-            values.push(input.value.trim());
-          }
-        }
-
+        // Remove the URL represented by the clicked slot.
         values.splice(index - 1, 1);
 
+        // Compact the remaining non-empty URLs.
+        const compacted = values.filter(Boolean);
+
         for (let i = 1; i <= MAX_VIDEOS; i++) {
-          const input = document.getElementById(`url${i}`);
+          const input =
+            document.getElementById(`url${i}`);
 
           if (input) {
-            input.value = values[i - 1] || '';
+            input.value =
+              compacted[i - 1] || '';
           }
         }
 
@@ -372,45 +707,59 @@
       }
 
       /**
-       * Render toàn bộ Multiview.
+       * Render all visible Multiview slots.
        */
       function render() {
         const n = Math.max(
           1,
-          Math.min(MAX_VIDEOS, Number(count.value) || 1)
+          Math.min(
+            MAX_VIDEOS,
+            Number(count.value) || 1
+          )
         );
 
         grid.innerHTML = '';
 
-        // Layout:
-        // 1 video = 1 cột
-        // 2-4 video = 2 cột
+        // Desktop:
+        // 1 video  -> 1 x 1
+        // 2 videos -> 2 x 1
+        // 3 videos -> 2 x 2
+        // 4 videos -> 2 x 2
         grid.style.gridTemplateColumns =
           n === 1
             ? '1fr'
             : 'repeat(2, minmax(0, 1fr))';
 
-        // 3-4 video dùng tối đa 2 hàng.
         grid.style.gridTemplateRows =
           n <= 2
             ? '1fr'
             : 'repeat(2, minmax(0, 1fr))';
 
         for (let i = 1; i <= n; i++) {
-          const slot = document.createElement('section');
+          const slot =
+            document.createElement('section');
+
           slot.className = 'slot';
 
-          const input = document.getElementById(`url${i}`);
-          const id = getVideoId(input ? input.value : '');
+          const input =
+            document.getElementById(`url${i}`);
+
+          const id =
+            getVideoId(
+              input ? input.value : ''
+            );
 
           if (!id) {
             slot.classList.add('empty');
-            slot.textContent = `Khung ${i} — chưa có video`;
+            slot.textContent =
+              `Khung ${i} — chưa có video`;
+
             grid.appendChild(slot);
             continue;
           }
 
-          const iframe = document.createElement('iframe');
+          const iframe =
+            document.createElement('iframe');
 
           const params = new URLSearchParams({
             autoplay: '1',
@@ -422,48 +771,63 @@
           });
 
           iframe.src =
-            `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(id)}?${params.toString()}`;
+            `${YOUTUBE_ORIGIN}/embed/` +
+            `${encodeURIComponent(id)}?` +
+            `${params.toString()}`;
 
-          iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+          iframe.referrerPolicy =
+            'strict-origin-when-cross-origin';
 
           iframe.allow =
-            'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+            'accelerometer; autoplay; clipboard-write; ' +
+            'encrypted-media; gyroscope; picture-in-picture; ' +
+            'web-share';
 
           iframe.allowFullscreen = true;
           iframe.title = `YouTube video ${i}`;
-
-          // loading="eager" vì mục tiêu của trang là mở Multiview ngay.
           iframe.loading = 'eager';
 
-          const removeButton = document.createElement('button');
+          const removeButton =
+            document.createElement('button');
+
           removeButton.className = 'remove';
           removeButton.type = 'button';
           removeButton.textContent = '×';
-          removeButton.title = `Xóa video ${i}`;
-          removeButton.setAttribute('aria-label', `Xóa video ${i}`);
+          removeButton.title =
+            `Xóa video ${i}`;
 
-          removeButton.addEventListener('click', () => {
-            removeVideo(i);
-          });
+          removeButton.setAttribute(
+            'aria-label',
+            `Xóa video ${i}`
+          );
+
+          removeButton.addEventListener(
+            'click',
+            () => removeVideo(i)
+          );
 
           slot.appendChild(iframe);
           slot.appendChild(removeButton);
           grid.appendChild(slot);
         }
 
-        // Các slot còn thiếu trong layout chỉ xuất hiện khi người dùng chọn
-        // số khung lớn hơn số video thực tế. Điều này được xử lý ở trên bằng
-        // slot.empty, không tạo iframe giả.
+        /*
+         * If video URLs exist, hide the controls after rendering.
+         * When there are no URLs, keep the controls visible.
+         */
+        setControlsVisible(!hasAnyVideoInput());
       }
 
       /**
-       * Mute/unmute tất cả iframe.
-       *
-       * Lưu ý:
-       * YouTube iframe phải có enablejsapi=1 mới nhận command này.
+       * Toggle global mute/unmute.
        */
       function toggleMuteAll() {
-        const iframes = grid.querySelectorAll('iframe');
+        const iframes =
+          grid.querySelectorAll('iframe');
+
+        if (!iframes.length) {
+          return;
+        }
 
         allMuted = !allMuted;
 
@@ -474,17 +838,19 @@
           );
         });
 
-        muteAllButton.textContent = allMuted
-          ? 'Bật tiếng tất cả'
-          : 'Tắt tiếng tất cả';
+        muteAllButton.textContent =
+          allMuted
+            ? 'Bật tiếng tất cả'
+            : 'Tắt tiếng tất cả';
       }
 
       /**
-       * Xóa toàn bộ input.
+       * Clear all videos.
        */
       function clearAll() {
         for (let i = 1; i <= MAX_VIDEOS; i++) {
-          const input = document.getElementById(`url${i}`);
+          const input =
+            document.getElementById(`url${i}`);
 
           if (input) {
             input.value = '';
@@ -492,33 +858,198 @@
         }
 
         allMuted = true;
-        muteAllButton.textContent = 'Tắt tiếng tất cả';
+        muteAllButton.textContent =
+          'Tắt tiếng tất cả';
 
         render();
+        setControlsVisible(true);
       }
 
-      loadButton.addEventListener('click', render);
-      clearButton.addEventListener('click', clearAll);
-      muteAllButton.addEventListener('click', toggleMuteAll);
-
-      count.addEventListener('change', render);
-
-      // Enter trong bất kỳ ô URL nào = tải Multiview.
-      for (let i = 1; i <= MAX_VIDEOS; i++) {
-        const input = document.getElementById(`url${i}`);
-
-        input.addEventListener('keydown', event => {
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            render();
+      /**
+       * Enter browser fullscreen.
+       */
+      async function enterFullscreen() {
+        try {
+          if (!document.fullscreenElement) {
+            if (document.documentElement.requestFullscreen) {
+              await document.documentElement.requestFullscreen();
+            } else if (grid.requestFullscreen) {
+              await grid.requestFullscreen();
+            }
           }
-        });
+        } catch (error) {
+          console.warn(
+            'Fullscreen is not available:',
+            error
+          );
+        }
       }
 
-      // Render trạng thái ban đầu.
+      /**
+       * Exit browser fullscreen.
+       */
+      async function exitFullscreen() {
+        try {
+          if (document.fullscreenElement) {
+            await document.exitFullscreen();
+          }
+        } catch (error) {
+          console.warn(
+            'Unable to exit fullscreen:',
+            error
+          );
+        }
+      }
+
+      /**
+       * Update fullscreen UI.
+       */
+      function updateFullscreenUI() {
+        const isFullscreen =
+          Boolean(document.fullscreenElement);
+
+        document.body.classList.toggle(
+          'is-fullscreen',
+          isFullscreen
+        );
+
+        fullscreenButton.textContent =
+          isFullscreen
+            ? 'Thoát toàn màn hình'
+            : 'Toàn màn hình';
+      }
+
+      /**
+       * Toggle control panel.
+       */
+      toggleControlsButton.addEventListener(
+        'click',
+        () => {
+          setControlsVisible(
+            !controlsVisible
+          );
+        }
+      );
+
+      /**
+       * Fullscreen buttons.
+       */
+      fullscreenButton.addEventListener(
+        'click',
+        () => {
+          if (document.fullscreenElement) {
+            exitFullscreen();
+          } else {
+            enterFullscreen();
+          }
+        }
+      );
+
+      exitFullscreenButton.addEventListener(
+        'click',
+        exitFullscreen
+      );
+
+      /**
+       * Fullscreen state changes, including Escape.
+       */
+      document.addEventListener(
+        'fullscreenchange',
+        updateFullscreenUI
+      );
+
+      /**
+       * Main controls.
+       */
+      loadButton.addEventListener(
+        'click',
+        render
+      );
+
+      clearButton.addEventListener(
+        'click',
+        clearAll
+      );
+
+      muteAllButton.addEventListener(
+        'click',
+        toggleMuteAll
+      );
+
+      count.addEventListener(
+        'change',
+        render
+      );
+
+      /**
+       * Enter key loads Multiview.
+       */
+      for (let i = 1; i <= MAX_VIDEOS; i++) {
+        const input =
+          document.getElementById(`url${i}`);
+
+        input.addEventListener(
+          'keydown',
+          event => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              render();
+            }
+          }
+        );
+      }
+
+      /**
+       * Keyboard shortcuts:
+       * H = show/hide controls
+       * F = fullscreen
+       * M = mute/unmute all
+       * Esc = browser handles fullscreen exit
+       */
+      document.addEventListener(
+        'keydown',
+        event => {
+          const tag =
+            document.activeElement?.tagName;
+
+          const typing =
+            tag === 'INPUT' ||
+            tag === 'TEXTAREA' ||
+            tag === 'SELECT';
+
+          if (typing) {
+            return;
+          }
+
+          const key =
+            event.key.toLowerCase();
+
+          if (key === 'h') {
+            setControlsVisible(
+              !controlsVisible
+            );
+          }
+
+          if (key === 'f') {
+            if (document.fullscreenElement) {
+              exitFullscreen();
+            } else {
+              enterFullscreen();
+            }
+          }
+
+          if (key === 'm') {
+            toggleMuteAll();
+          }
+        }
+      );
+
+      // Start with controls visible so the user can enter URLs.
+      setControlsVisible(true);
+
+      // Initial render.
       render();
     })();
   </script>
 </body>
 </html>
-```
