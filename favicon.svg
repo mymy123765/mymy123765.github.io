@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF2222"/>
+      <stop offset="100%" stop-color="#CC0000"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Badge -->
+  <rect width="64" height="64" rx="14" fill="url(#grad)"/>
+  
+  <!-- 2x2 Multiview Grid Slots -->
+  <rect x="10" y="10" width="20" height="19" rx="3" fill="#FFFFFF" fill-opacity="0.95"/>
+  <rect x="34" y="10" width="20" height="19" rx="3" fill="#FFFFFF" fill-opacity="0.95"/>
+  <rect x="10" y="35" width="20" height="19" rx="3" fill="#FFFFFF" fill-opacity="0.95"/>
+  <rect x="34" y="35" width="20" height="19" rx="3" fill="#FFFFFF" fill-opacity="0.95"/>
+
+  <!-- Play Symbol Accents in Slots -->
+  <polygon points="18,16 18,23 24,19.5" fill="#CC0000"/>
+  <polygon points="42,16 42,23 48,19.5" fill="#CC0000"/>
+  <polygon points="18,41 18,48 24,44.5" fill="#CC0000"/>
+  <polygon points="42,41 42,48 48,44.5" fill="#CC0000"/>
+</svg>
