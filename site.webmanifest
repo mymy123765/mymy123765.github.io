@@ -4,8 +4,8 @@
   "description": "Xem đồng thời tối đa 4 video, livestream YouTube trên cùng một màn hình.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f0f",
-  "theme_color": "#0f0f0f",
+  "background_color": "#05060b",
+  "theme_color": "#05060b",
   "icons": [
     {
       "src": "favicon.svg",

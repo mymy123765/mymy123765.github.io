@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="theme-color" content="#0f0f0f">
+  <meta name="theme-color" content="#05060b">
   <meta name="description" content="Xem đồng thời tối đa 4 video hoặc livestream YouTube trên cùng một màn hình với giao diện trực quan và phím tắt tiện lợi.">
 
   <!-- Open Graph / SEO -->
   <meta property="og:title" content="YouTube Multiview — tối đa 4 video">
   <meta property="og:description" content="Xem đồng thời tối đa 4 video hoặc livestream YouTube trên cùng một màn hình.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://mymy123765.github.io">
+  <meta property="og:url" content="https://mymy123765.github.io/">
 
   <!-- Favicon & PWA Manifest -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -22,213 +22,323 @@
   <style>
     :root {
       color-scheme: dark;
+      --bg-page: #05060b;
+      --bg-panel: #03050a;
+      --bg-panel-selected: #10132a;
+      --bg-control: #080a18;
+      --bg-control-active: #14193d;
+      --border-panel: #293951;
+      --border-btn: #22265c;
+      --border-active: #3b5cb8;
+      --text-primary: #d6d7e0;
+      --text-secondary: #7598c9;
+      --panel-radius: 8px;
+      --panel-gap: 10px;
     }
 
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     html,
     body {
-      margin: 0;
       width: 100%;
-      min-height: 100%;
-      font-family: Arial, sans-serif;
-      background: #0f0f0f;
-      color: #eee;
+      height: 100%;
+      height: 100dvh;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
     body {
-      min-height: 100vh;
-      min-height: 100dvh;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
 
-    /* =========================
-       TOP BAR
-       ========================= */
+    /* =========================================================
+       TOOLBAR
+       ========================================================= */
 
-    #header {
+    .multiview-toolbar {
       flex: 0 0 auto;
-      background: #181818;
-      border-bottom: 1px solid #292929;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 22px;
+      padding: 14px 16px 10px;
+      padding-top: max(14px, env(safe-area-inset-top));
       z-index: 20;
+      user-select: none;
     }
 
-    .topbar {
-      min-height: 48px;
-      padding: 6px 10px;
-      display: flex;
+    .control-group {
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding-top: max(6px, env(safe-area-inset-top));
+      gap: 10px;
     }
 
-    h1 {
-      margin: 0;
-      min-width: 0;
-      font-size: 17px;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .control-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: 0.2px;
     }
 
-    .topbar-actions {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    /* =========================
-       CONTROLS PANEL
-       ========================= */
-
-    .controls-panel {
-      max-height: 300px;
-      padding: 0 10px 10px;
-      overflow: hidden;
-      opacity: 1;
-      visibility: visible;
-
-      transition:
-        max-height 180ms ease,
-        opacity 120ms ease,
-        padding 180ms ease,
-        visibility 0s linear 0s;
-    }
-
-    .controls-panel.collapsed {
-      max-height: 0;
-      padding-top: 0;
-      padding-bottom: 0;
-      opacity: 0;
-      visibility: hidden;
-      transition:
-        max-height 180ms ease,
-        opacity 120ms ease,
-        padding 180ms ease,
-        visibility 0s linear 180ms;
-    }
-
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(160px, 1fr));
-      gap: 6px;
-      width: 100%;
-    }
-
-    .row {
-      display: flex;
-      gap: 6px;
+    .segmented-control {
+      display: inline-flex;
       align-items: center;
-      margin-top: 7px;
-      flex-wrap: wrap;
-    }
-
-    .hint {
-      display: none;
-    }
-
-    input,
-    select,
-    button {
-      font: inherit;
+      background: var(--bg-control);
+      border: 1px solid var(--border-btn);
       border-radius: 6px;
-      border: 1px solid #444;
+      padding: 2px;
+      gap: 1px;
     }
 
-    input {
-      width: 100%;
-      min-width: 0;
-      padding: 8px 10px;
-      background: #101010;
-      color: #fff;
-    }
-
-    input::placeholder {
-      color: #7a7a7a;
-    }
-
-    button,
-    select {
-      padding: 7px 10px;
-      background: #252525;
-      color: #fff;
+    .btn-segmented {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 3px 10px;
+      height: 26px;
+      min-width: 28px;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      line-height: 1;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
 
-    button:hover {
-      background: #333;
+    .btn-segmented:hover:not(.active) {
+      color: #a4c2ee;
+      background: #0d122b;
     }
 
-    button:active {
-      transform: translateY(1px);
+    .btn-segmented.active {
+      background: var(--bg-control-active);
+      border-color: var(--border-active);
+      color: #ffffff;
+      font-weight: 600;
+      box-shadow: 0 0 4px rgba(59, 92, 184, 0.4);
     }
 
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .primary {
-      background: #cc0000;
-      border-color: #cc0000;
-    }
-
-    .primary:hover {
-      background: #e00000;
-    }
-
-    input:focus,
-    select:focus,
-    button:focus-visible {
-      outline: 2px solid #888;
+    .btn-segmented:focus-visible {
+      outline: 2px solid var(--border-active);
       outline-offset: 1px;
     }
 
-    /* =========================
-       VIDEO GRID
-       ========================= */
+    .layout-icon {
+      flex-shrink: 0;
+      display: inline-block;
+      vertical-align: middle;
+    }
 
-    #grid {
+    /* =========================================================
+       WORKSPACE & MULTIVIEW GRID
+       ========================================================= */
+
+    .multiview-workspace {
       flex: 1 1 auto;
       min-width: 0;
       min-height: 0;
       width: 100%;
-      height: auto;
-
-      padding: 6px;
+      height: 100%;
       display: grid;
-      gap: 6px;
-
-      grid-template-columns: 1fr;
-      grid-template-rows: 1fr;
-
-      background: #0f0f0f;
+      gap: var(--panel-gap);
+      padding: 2px 12px 12px 12px;
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+      box-sizing: border-box;
     }
 
-    .slot {
+    /* Layout: Streams = 2, Equal (Image 1) */
+    .multiview-workspace.streams-2.layout-equal {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: minmax(0, 1fr);
+    }
+    .multiview-workspace.streams-2.layout-equal .stream-panel[data-slot="1"] {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .multiview-workspace.streams-2.layout-equal .stream-panel[data-slot="2"] {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    /* Layout: Streams = 2, Main */
+    .multiview-workspace.streams-2.layout-main {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+    }
+    .multiview-workspace.streams-2.layout-main .stream-panel[data-slot="1"] {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .multiview-workspace.streams-2.layout-main .stream-panel[data-slot="2"] {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    /* Layout: Streams = 3, Equal (Image 3: 2 on top, 1 centered below with equal width) */
+    .multiview-workspace.streams-3.layout-equal {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+    .multiview-workspace.streams-3.layout-equal .stream-panel[data-slot="1"] {
+      grid-column: 1 / 3;
+      grid-row: 1;
+    }
+    .multiview-workspace.streams-3.layout-equal .stream-panel[data-slot="2"] {
+      grid-column: 3 / 5;
+      grid-row: 1;
+    }
+    .multiview-workspace.streams-3.layout-equal .stream-panel[data-slot="3"] {
+      grid-column: 2 / 4;
+      grid-row: 2;
+    }
+
+    /* Layout: Streams = 3, Main (Image 2: 1 left dominant, 2 stacked right) */
+    .multiview-workspace.streams-3.layout-main {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+    .multiview-workspace.streams-3.layout-main .stream-panel[data-slot="1"] {
+      grid-column: 1;
+      grid-row: 1 / 3;
+    }
+    .multiview-workspace.streams-3.layout-main .stream-panel[data-slot="2"] {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .multiview-workspace.streams-3.layout-main .stream-panel[data-slot="3"] {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    /* Layout: Streams = 4, Equal (Image 4: 2x2 grid) */
+    .multiview-workspace.streams-4.layout-equal {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+    .multiview-workspace.streams-4.layout-equal .stream-panel[data-slot="1"] {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .multiview-workspace.streams-4.layout-equal .stream-panel[data-slot="2"] {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .multiview-workspace.streams-4.layout-equal .stream-panel[data-slot="3"] {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    .multiview-workspace.streams-4.layout-equal .stream-panel[data-slot="4"] {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    /* Layout: Streams = 4, Main (Image 5: 1 left dominant, 3 stacked right) */
+    .multiview-workspace.streams-4.layout-main {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+      grid-template-rows: repeat(3, minmax(0, 1fr));
+    }
+    .multiview-workspace.streams-4.layout-main .stream-panel[data-slot="1"] {
+      grid-column: 1;
+      grid-row: 1 / 4;
+    }
+    .multiview-workspace.streams-4.layout-main .stream-panel[data-slot="2"] {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .multiview-workspace.streams-4.layout-main .stream-panel[data-slot="3"] {
+      grid-column: 2;
+      grid-row: 2;
+    }
+    .multiview-workspace.streams-4.layout-main .stream-panel[data-slot="4"] {
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    /* =========================================================
+       STREAM PANEL COMPONENT
+       ========================================================= */
+
+    .stream-panel {
       position: relative;
       min-width: 0;
       min-height: 0;
-      background: #000;
-      border: 1px solid #292929;
-      border-radius: 6px;
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-panel);
+      border: 1.5px dashed var(--border-panel);
+      border-radius: var(--panel-radius);
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+      user-select: none;
     }
 
-    .slot.empty {
-      display: grid;
-      place-items: center;
-      color: #666;
-      font-size: 14px;
+    .stream-panel.is-empty {
+      cursor: pointer;
     }
 
-    iframe {
+    .stream-panel.is-empty:hover {
+      border-color: #3b5cb8;
+    }
+
+    .stream-panel.is-empty:focus-visible {
+      outline: 2px solid var(--border-active);
+      outline-offset: 1px;
+    }
+
+    .stream-panel.is-active {
+      background-color: var(--bg-panel-selected);
+    }
+
+    /* Empty panel internal content */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .empty-state .plus-icon {
+      width: 38px;
+      height: 38px;
+      color: var(--text-primary);
+      stroke: var(--text-primary);
+    }
+
+    .empty-state .add-stream-label {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-top: 18px;
+      letter-spacing: 0.2px;
+    }
+
+    /* Configured stream iframe */
+    .stream-panel.has-video {
+      border-style: solid;
+      border-color: #1a2233;
+      background: #000;
+    }
+
+    .stream-panel iframe {
       width: 100%;
       height: 100%;
       border: 0;
@@ -236,391 +346,398 @@
       background: #000;
     }
 
-    /* =========================
-       REMOVE BUTTON
-       ========================= */
-
-    .remove {
+    /* Remove button */
+    .btn-remove {
       position: absolute;
-      z-index: 2;
-      right: 5px;
-      top: 5px;
-
-      width: 30px;
-      height: 30px;
+      top: 8px;
+      right: 8px;
+      z-index: 10;
+      width: 28px;
+      height: 28px;
       padding: 0;
-
+      border-radius: 50%;
+      background: rgba(3, 5, 10, 0.75);
+      border: 1px solid var(--border-panel);
+      color: var(--text-primary);
+      font-size: 16px;
+      line-height: 1;
       display: grid;
       place-items: center;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    }
 
-      background: rgba(0, 0, 0, 0.72);
-      border-color: #555;
+    .stream-panel:hover .btn-remove,
+    .btn-remove:focus-visible {
+      opacity: 1;
+    }
+
+    .btn-remove:hover {
+      background: #cc2424;
+      border-color: #cc2424;
+      color: #ffffff;
+    }
+
+    .btn-remove:focus-visible {
+      outline: 2px solid var(--border-active);
+      outline-offset: 1px;
+    }
+
+    /* =========================================================
+       ADD STREAM MODAL
+       ========================================================= */
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 5, 10, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay[hidden] {
+      display: none;
+    }
+
+    .modal-card {
+      background: #090d1f;
+      border: 1px solid var(--border-panel);
+      border-radius: 10px;
+      width: min(440px, 94vw);
+      padding: 22px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+      animation: modalFadeIn 0.15s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 20px;
       line-height: 1;
-      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
     }
 
-    .remove:hover {
-      background: rgba(50, 50, 50, 0.92);
+    .modal-close:hover {
+      color: var(--text-primary);
     }
 
-    /* =========================
-       FULLSCREEN
-       ========================= */
+    .modal-label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
 
-    #exitFullscreen {
+    .modal-input {
+      width: 100%;
+      background: #04060d;
+      border: 1px solid var(--border-panel);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .modal-input::placeholder {
+      color: #4a5c7a;
+    }
+
+    .modal-input:focus {
+      border-color: var(--border-active);
+      box-shadow: 0 0 0 2px rgba(59, 92, 184, 0.3);
+    }
+
+    .modal-hint {
+      font-size: 12px;
+      color: #556c8e;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-modal {
+      font-family: inherit;
+      font-size: 13px;
+      padding: 7px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn-cancel {
+      background: #0f142b;
+      border: 1px solid var(--border-btn);
+      color: var(--text-secondary);
+    }
+
+    .btn-cancel:hover {
+      background: #141a38;
+      color: #9cbde8;
+    }
+
+    .btn-submit {
+      background: #182352;
+      border: 1px solid var(--border-active);
+      color: #ffffff;
+    }
+
+    .btn-submit:hover {
+      background: #202e6e;
+    }
+
+    /* =========================================================
+       FULLSCREEN UI
+       ========================================================= */
+
+    .btn-exit-fullscreen {
       position: fixed;
       z-index: 100;
-
-      right: max(10px, env(safe-area-inset-right));
-      bottom: max(10px, env(safe-area-inset-bottom));
-
+      right: max(14px, env(safe-area-inset-right));
+      bottom: max(14px, env(safe-area-inset-bottom));
       display: none;
-
-      padding: 8px 12px;
-      background: rgba(0, 0, 0, 0.78);
-      border-color: #555;
+      padding: 8px 14px;
+      background: rgba(9, 13, 31, 0.85);
+      border: 1px solid var(--border-panel);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
       backdrop-filter: blur(8px);
     }
 
-    body.is-fullscreen #header {
+    .btn-exit-fullscreen:hover {
+      background: rgba(18, 25, 60, 0.95);
+      color: var(--text-primary);
+    }
+
+    body.is-fullscreen .multiview-toolbar {
       display: none;
     }
 
-    body.is-fullscreen #grid {
-      width: 100vw;
-      height: 100dvh;
-      padding: 0;
-      gap: 2px;
+    body.is-fullscreen .multiview-workspace {
+      padding: 4px;
+      gap: 6px;
     }
 
-    body.is-fullscreen #exitFullscreen {
+    body.is-fullscreen .btn-exit-fullscreen {
       display: block;
     }
 
-    /* =========================
-       TABLET
-       ========================= */
+    /* =========================================================
+       MOBILE & RESPONSIVE ADJUSTMENTS
+       ========================================================= */
 
-    @media (max-width: 1000px) {
-      .controls {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    /* =========================
-       MOBILE
-       ========================= */
-
-    @media (max-width: 700px) {
-      .topbar {
-        min-height: 44px;
-        padding-left: 8px;
-        padding-right: 8px;
-      }
-
-      h1 {
-        font-size: 15px;
-      }
-
-      .topbar-actions {
-        gap: 4px;
-      }
-
-      .topbar-actions button {
-        padding: 6px 8px;
-        font-size: 12px;
-      }
-
-      .controls-panel {
-        padding-left: 8px;
-        padding-right: 8px;
-      }
-
-      .controls {
-        grid-template-columns: 1fr;
-      }
-
-      .row {
-        margin-top: 6px;
-      }
-
-      #grid {
-        padding: 4px;
-        gap: 4px;
-
-        grid-template-columns: 1fr !important;
-        grid-template-rows: none !important;
-
+    @media (max-width: 768px) {
+      body {
         overflow-y: auto;
-        overflow-x: hidden;
-        align-content: start;
+        height: auto;
+        min-height: 100dvh;
       }
 
-      .slot {
+      .multiview-toolbar {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 10px 8px;
+      }
+
+      .multiview-workspace {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        padding: 8px;
+        gap: 8px;
+        overflow: visible;
+      }
+
+      .stream-panel {
         aspect-ratio: 16 / 9;
-        border-radius: 4px;
-      }
-    }
-
-    /* =========================
-       VERY SMALL PHONES
-       ========================= */
-
-    @media (max-width: 420px) {
-      .topbar-actions button {
-        font-size: 11px;
-      }
-
-      #grid {
-        padding: 2px;
-        gap: 2px;
-      }
-
-      .remove {
-        width: 28px;
-        height: 28px;
-      }
-    }
-
-    /* =========================
-       REDUCED MOTION
-       ========================= */
-
-    @media (prefers-reduced-motion: reduce) {
-      .controls-panel {
-        transition: none;
-      }
-    }
-
-    /* =========================
-       LANDSCAPE MOBILE
-       ========================= */
-
-    @media (max-width: 900px) and (orientation: landscape) {
-      #grid {
-        padding: 2px;
-        gap: 2px;
-      }
-
-      .topbar {
-        min-height: 40px;
-      }
-
-      h1 {
-        font-size: 14px;
+        min-height: 200px;
+        width: 100%;
       }
     }
   </style>
 </head>
 
 <body>
-  <header id="header">
-    <div class="topbar">
-      <h1>YouTube Multiview</h1>
-
-      <div class="topbar-actions">
-        <button
-          id="toggleControls"
-          type="button"
-          aria-expanded="false"
-          aria-controls="controlsPanel"
-        >
-          Điều khiển
-        </button>
-
-        <button
-          id="fullscreenButton"
-          type="button"
-        >
-          Toàn màn hình
-        </button>
+  <!-- TOOLBAR -->
+  <header id="toolbar" class="multiview-toolbar" role="toolbar" aria-label="Multiview Toolbar">
+    <!-- Stream Count Selector -->
+    <div class="control-group" id="streamCountGroup">
+      <span class="control-label" id="streamsLabel">Streams</span>
+      <div class="segmented-control" role="group" aria-labelledby="streamsLabel">
+        <button type="button" class="btn-segmented" data-count="2" aria-pressed="false">2</button>
+        <button type="button" class="btn-segmented" data-count="3" aria-pressed="false">3</button>
+        <button type="button" class="btn-segmented" data-count="4" aria-pressed="false">4</button>
       </div>
     </div>
 
-    <div
-      id="controlsPanel"
-      class="controls-panel collapsed"
-    >
-      <div class="controls">
-        <input
-          id="url1"
-          placeholder="Video 1 — dán link YouTube"
-          autocomplete="off"
-          spellcheck="false"
-        >
-
-        <input
-          id="url2"
-          placeholder="Video 2 — dán link YouTube"
-          autocomplete="off"
-          spellcheck="false"
-        >
-
-        <input
-          id="url3"
-          placeholder="Video 3 — dán link YouTube"
-          autocomplete="off"
-          spellcheck="false"
-        >
-
-        <input
-          id="url4"
-          placeholder="Video 4 — dán link YouTube"
-          autocomplete="off"
-          spellcheck="false"
-        >
-      </div>
-
-      <div class="row">
-        <label>
-          Số khung:
-          <select id="count">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4" selected>4</option>
-          </select>
-        </label>
-
-        <button class="primary" id="load" type="button">
-          Tải Multiview
+    <!-- Layout Selector -->
+    <div class="control-group" id="layoutGroup">
+      <span class="control-label" id="layoutLabel">Layout</span>
+      <div class="segmented-control" role="group" aria-labelledby="layoutLabel">
+        <button type="button" class="btn-segmented" data-layout="equal" aria-pressed="false">
+          <svg class="layout-icon" width="13" height="13" viewBox="0 0 14 14" aria-hidden="true" fill="currentColor">
+            <rect x="1" y="1" width="5.2" height="5.2" rx="0.8"/>
+            <rect x="7.8" y="1" width="5.2" height="5.2" rx="0.8"/>
+            <rect x="1" y="7.8" width="5.2" height="5.2" rx="0.8"/>
+            <rect x="7.8" y="7.8" width="5.2" height="5.2" rx="0.8"/>
+          </svg>
+          <span>Equal</span>
         </button>
-
-        <button id="clear" type="button">
-          Xóa tất cả
+        <button type="button" class="btn-segmented" data-layout="main" aria-pressed="false">
+          <svg class="layout-icon" width="13" height="13" viewBox="0 0 14 14" aria-hidden="true" fill="currentColor">
+            <rect x="1" y="1" width="6.6" height="12" rx="0.8"/>
+            <rect x="8.8" y="1" width="4.2" height="5.2" rx="0.8"/>
+            <rect x="8.8" y="7.8" width="4.2" height="5.2" rx="0.8"/>
+          </svg>
+          <span>Main</span>
         </button>
-
-        <button id="muteAll" type="button">
-          Tắt tiếng tất cả
-        </button>
-      </div>
-
-      <div class="hint">
-        Hỗ trợ URL watch, youtu.be, live, shorts và ID video 11 ký tự.
-        Video YouTube phải cho phép embedding.
       </div>
     </div>
   </header>
 
-  <main id="grid" aria-label="YouTube Multiview"></main>
+  <!-- WORKSPACE -->
+  <main id="workspace" class="multiview-workspace" aria-label="Multiview Workspace"></main>
 
-  <button
-    id="exitFullscreen"
-    type="button"
-    aria-label="Thoát toàn màn hình"
-  >
+  <!-- ADD STREAM MODAL -->
+  <div id="addStreamModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modalTitle" class="modal-title">Add Stream</h2>
+        <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Đóng hộp thoại">×</button>
+      </div>
+      <form id="addStreamForm" class="modal-form">
+        <label for="streamUrlInput" class="modal-label">YouTube Video URL hoặc Video ID</label>
+        <input
+          type="text"
+          id="streamUrlInput"
+          class="modal-input"
+          placeholder="https://www.youtube.com/watch?v=... hoặc ID video"
+          autocomplete="off"
+          spellcheck="false"
+          required
+        >
+        <p class="modal-hint">Hỗ trợ link watch, youtu.be, live, shorts, embed và ID video 11 ký tự.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn-modal btn-cancel" id="modalCancelBtn">Hủy</button>
+          <button type="submit" class="btn-modal btn-submit" id="modalSubmitBtn">Add Stream</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EXIT FULLSCREEN BUTTON -->
+  <button id="exitFullscreen" type="button" class="btn-exit-fullscreen" aria-label="Thoát toàn màn hình">
     Thoát toàn màn hình
   </button>
 
   <script>
     (() => {
-      const grid = document.getElementById('grid');
-      const count = document.getElementById('count');
-      const loadButton = document.getElementById('load');
-      const clearButton = document.getElementById('clear');
-      const muteAllButton = document.getElementById('muteAll');
+      'use strict';
 
-      const controlsPanel = document.getElementById('controlsPanel');
-      const toggleControlsButton =
-        document.getElementById('toggleControls');
-
-      const fullscreenButton =
-        document.getElementById('fullscreenButton');
-
-      const exitFullscreenButton =
-        document.getElementById('exitFullscreen');
-
-      const MAX_VIDEOS = 4;
       const YOUTUBE_ORIGIN = 'https://www.youtube.com';
+      const MAX_SLOTS = 4;
 
+      // State
+      let streamCount = 2;
+      let layoutMode = 'equal';
+      let streams = Array(MAX_SLOTS).fill(null);
+      let activeSlot = null;
       let allMuted = true;
-      let controlsVisible = false;
+
+      // DOM Elements
+      const workspace = document.getElementById('workspace');
+      const layoutGroup = document.getElementById('layoutGroup');
+      const streamCountButtons = document.querySelectorAll('#streamCountGroup button[data-count]');
+      const layoutButtons = document.querySelectorAll('#layoutGroup button[data-layout]');
+
+      const modal = document.getElementById('addStreamModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalForm = document.getElementById('addStreamForm');
+      const modalInput = document.getElementById('streamUrlInput');
+      const modalCloseBtn = document.getElementById('modalCloseBtn');
+      const modalCancelBtn = document.getElementById('modalCancelBtn');
+      const exitFullscreenBtn = document.getElementById('exitFullscreen');
 
       /**
-       * Validate YouTube video ID.
+       * Validate YouTube video ID (11 chars).
        */
       function isValidVideoId(id) {
-        return typeof id === 'string' &&
-          /^[A-Za-z0-9_-]{11}$/.test(id);
+        return typeof id === 'string' && /^[A-Za-z0-9_-]{11}$/.test(id);
       }
 
       /**
-       * Extract a YouTube video ID from:
-       * - youtube.com/watch?v=VIDEO_ID
-       * - youtu.be/VIDEO_ID
-       * - youtube.com/embed/VIDEO_ID
-       * - youtube.com/shorts/VIDEO_ID
-       * - youtube.com/live/VIDEO_ID
-       * - Direct 11-character video ID
+       * Extract a YouTube video ID from URL or return raw ID if valid.
        */
       function getVideoId(value) {
-        if (!value) {
-          return null;
-        }
-
+        if (!value) return null;
         value = value.trim();
-
-        if (isValidVideoId(value)) {
-          return value;
-        }
+        if (isValidVideoId(value)) return value;
 
         try {
           const url = new URL(value);
           const hostname = url.hostname.toLowerCase();
 
           // youtu.be/VIDEO_ID
-          if (
-            hostname === 'youtu.be' ||
-            hostname.endsWith('.youtu.be')
-          ) {
-            const id = url.pathname
-              .split('/')
-              .filter(Boolean)[0];
-
+          if (hostname === 'youtu.be' || hostname.endsWith('.youtu.be')) {
+            const id = url.pathname.split('/').filter(Boolean)[0];
             return isValidVideoId(id) ? id : null;
           }
 
           // youtube.com/...
-          if (
-            hostname === 'youtube.com' ||
-            hostname.endsWith('.youtube.com')
-          ) {
-            // /watch?v=VIDEO_ID
+          if (hostname === 'youtube.com' || hostname.endsWith('.youtube.com')) {
             const watchId = url.searchParams.get('v');
+            if (watchId && isValidVideoId(watchId)) return watchId;
 
-            if (watchId) {
-              return isValidVideoId(watchId)
-                ? watchId
-                : null;
-            }
-
-            // /embed/VIDEO_ID
-            // /shorts/VIDEO_ID
-            // /live/VIDEO_ID
-            const parts = url.pathname
-              .split('/')
-              .filter(Boolean);
-
-            const supportedTypes = [
-              'embed',
-              'shorts',
-              'live'
-            ];
-
-            const typeIndex = parts.findIndex(
-              part =>
-                supportedTypes.includes(part.toLowerCase())
-            );
-
-            if (
-              typeIndex >= 0 &&
-              parts[typeIndex + 1]
-            ) {
+            const parts = url.pathname.split('/').filter(Boolean);
+            const supportedTypes = ['embed', 'shorts', 'live'];
+            const typeIndex = parts.findIndex(p => supportedTypes.includes(p.toLowerCase()));
+            if (typeIndex >= 0 && parts[typeIndex + 1]) {
               const id = parts[typeIndex + 1];
-
-              return isValidVideoId(id)
-                ? id
-                : null;
+              return isValidVideoId(id) ? id : null;
             }
           }
         } catch {
@@ -631,57 +748,10 @@
       }
 
       /**
-       * Return all four current URL values.
-       */
-      function getInputValues() {
-        return Array.from(
-          { length: MAX_VIDEOS },
-          (_, index) => {
-            const input =
-              document.getElementById(`url${index + 1}`);
-
-            return input ? input.value.trim() : '';
-          }
-        );
-      }
-
-      /**
-       * Check whether at least one video URL exists.
-       */
-      function hasAnyVideoInput() {
-        return getInputValues().some(Boolean);
-      }
-
-      /**
-       * Show/hide the control panel.
-       */
-      function setControlsVisible(visible) {
-        controlsVisible = Boolean(visible);
-
-        controlsPanel.classList.toggle(
-          'collapsed',
-          !controlsVisible
-        );
-
-        toggleControlsButton.textContent =
-          controlsVisible
-            ? 'Ẩn điều khiển'
-            : 'Điều khiển';
-
-        toggleControlsButton.setAttribute(
-          'aria-expanded',
-          String(controlsVisible)
-        );
-      }
-
-      /**
-       * Send a command to a YouTube iframe player.
+       * Send postMessage command to YouTube iframe player.
        */
       function sendYouTubeCommand(iframe, func) {
-        if (!iframe || !iframe.contentWindow) {
-          return;
-        }
-
+        if (!iframe || !iframe.contentWindow) return;
         iframe.contentWindow.postMessage(
           JSON.stringify({
             event: 'command',
@@ -693,372 +763,313 @@
       }
 
       /**
-       * Remove one video input and compact the remaining URLs.
+       * Open Add Stream dialog for slot index (1-based).
        */
-      function removeVideo(index) {
-        const values = getInputValues();
+      function openAddStreamModal(slotNum) {
+        activeSlot = slotNum;
+        modalTitle.textContent = `Add Stream — Slot ${slotNum}`;
+        modalInput.value = streams[slotNum - 1] || '';
+        modal.hidden = false;
+        renderActivePanelHighlight();
+        setTimeout(() => {
+          modalInput.focus();
+          modalInput.select();
+        }, 50);
+      }
 
-        // Remove the URL represented by the clicked slot.
-        values.splice(index - 1, 1);
+      /**
+       * Close Add Stream dialog.
+       */
+      function closeAddStreamModal() {
+        modal.hidden = true;
+        renderActivePanelHighlight();
+      }
 
-        // Compact the remaining non-empty URLs.
-        const compacted = values.filter(Boolean);
+      /**
+       * Add stream to active slot.
+       */
+      function saveStreamFromModal(e) {
+        e.preventDefault();
+        const value = modalInput.value.trim();
+        const videoId = getVideoId(value);
 
-        for (let i = 1; i <= MAX_VIDEOS; i++) {
-          const input =
-            document.getElementById(`url${i}`);
-
-          if (input) {
-            input.value =
-              compacted[i - 1] || '';
-          }
+        if (activeSlot && videoId) {
+          streams[activeSlot - 1] = videoId;
+          closeAddStreamModal();
+          render();
+        } else if (!videoId) {
+          alert('Không tìm thấy Video ID YouTube hợp lệ. Vui lòng kiểm tra lại đường dẫn.');
         }
+      }
 
+      /**
+       * Remove stream from slot (1-based).
+       */
+      function removeStream(slotNum) {
+        streams[slotNum - 1] = null;
+        if (activeSlot === slotNum) {
+          activeSlot = null;
+        }
         render();
       }
 
       /**
-       * Render all visible Multiview slots.
+       * Update active highlight on panels.
        */
-      function render() {
-        const n = Math.max(
-          1,
-          Math.min(
-            MAX_VIDEOS,
-            Number(count.value) || 1
-          )
-        );
-
-        grid.innerHTML = '';
-
-        // Desktop:
-        // 1 video  -> 1 x 1
-        // 2 videos -> 2 x 1
-        // 3 videos -> 2 x 2
-        // 4 videos -> 2 x 2
-        grid.style.gridTemplateColumns =
-          n === 1
-            ? '1fr'
-            : 'repeat(2, minmax(0, 1fr))';
-
-        grid.style.gridTemplateRows =
-          n <= 2
-            ? '1fr'
-            : 'repeat(2, minmax(0, 1fr))';
-
-        for (let i = 1; i <= n; i++) {
-          const slot =
-            document.createElement('section');
-
-          slot.className = 'slot';
-
-          const input =
-            document.getElementById(`url${i}`);
-
-          const id =
-            getVideoId(
-              input ? input.value : ''
-            );
-
-          if (!id) {
-            slot.classList.add('empty');
-            slot.textContent =
-              `Khung ${i} — chưa có video`;
-
-            grid.appendChild(slot);
-            continue;
+      function renderActivePanelHighlight() {
+        const panels = workspace.querySelectorAll('.stream-panel');
+        panels.forEach(panel => {
+          const slotNum = Number(panel.getAttribute('data-slot'));
+          if (slotNum === activeSlot) {
+            panel.classList.add('is-active');
+          } else {
+            panel.classList.remove('is-active');
           }
-
-          const iframe =
-            document.createElement('iframe');
-
-          const params = new URLSearchParams({
-            autoplay: '1',
-            mute: '1',
-            rel: '0',
-            playsinline: '1',
-            enablejsapi: '1',
-            origin: window.location.origin
-          });
-
-          iframe.src =
-            `${YOUTUBE_ORIGIN}/embed/` +
-            `${encodeURIComponent(id)}?` +
-            `${params.toString()}`;
-
-          iframe.referrerPolicy =
-            'strict-origin-when-cross-origin';
-
-          iframe.allow =
-            'accelerometer; autoplay; clipboard-write; ' +
-            'encrypted-media; gyroscope; picture-in-picture; ' +
-            'web-share';
-
-          iframe.allowFullscreen = true;
-          iframe.title = `YouTube video ${i}`;
-          iframe.loading = 'eager';
-
-          const removeButton =
-            document.createElement('button');
-
-          removeButton.className = 'remove';
-          removeButton.type = 'button';
-          removeButton.textContent = '×';
-          removeButton.title =
-            `Xóa video ${i}`;
-
-          removeButton.setAttribute(
-            'aria-label',
-            `Xóa video ${i}`
-          );
-
-          removeButton.addEventListener(
-            'click',
-            () => removeVideo(i)
-          );
-
-          slot.appendChild(iframe);
-          slot.appendChild(removeButton);
-          grid.appendChild(slot);
-        }
-
-        /*
-         * If video URLs exist, hide the controls after rendering.
-         * When there are no URLs, keep the controls visible.
-         */
-        setControlsVisible(!hasAnyVideoInput());
+        });
       }
 
       /**
-       * Toggle global mute/unmute.
+       * Update Toolbar UI controls.
        */
-      function toggleMuteAll() {
-        const iframes =
-          grid.querySelectorAll('iframe');
-
-        if (!iframes.length) {
-          return;
-        }
-
-        allMuted = !allMuted;
-
-        iframes.forEach(iframe => {
-          sendYouTubeCommand(
-            iframe,
-            allMuted ? 'mute' : 'unMute'
-          );
+      function updateToolbarUI() {
+        // Stream count buttons
+        streamCountButtons.forEach(btn => {
+          const count = Number(btn.getAttribute('data-count'));
+          const isActive = count === streamCount;
+          btn.classList.toggle('active', isActive);
+          btn.setAttribute('aria-pressed', String(isActive));
         });
 
-        muteAllButton.textContent =
-          allMuted
-            ? 'Bật tiếng tất cả'
-            : 'Tắt tiếng tất cả';
-      }
-
-      /**
-       * Clear all videos.
-       */
-      function clearAll() {
-        for (let i = 1; i <= MAX_VIDEOS; i++) {
-          const input =
-            document.getElementById(`url${i}`);
-
-          if (input) {
-            input.value = '';
-          }
+        // Layout group visibility: Hidden when 2 streams (matching Image 1)
+        if (streamCount === 2) {
+          layoutGroup.style.display = 'none';
+        } else {
+          layoutGroup.style.display = 'inline-flex';
         }
 
-        allMuted = true;
-        muteAllButton.textContent =
-          'Tắt tiếng tất cả';
-
-        render();
-        setControlsVisible(true);
+        // Layout buttons
+        layoutButtons.forEach(btn => {
+          const layout = btn.getAttribute('data-layout');
+          const isActive = layout === layoutMode;
+          btn.classList.toggle('active', isActive);
+          btn.setAttribute('aria-pressed', String(isActive));
+        });
       }
 
       /**
-       * Enter browser fullscreen.
+       * Render Multiview workspace panels and layout classes.
+       */
+      function render() {
+        updateToolbarUI();
+
+        // Workspace CSS grid classes
+        const effectiveLayout = streamCount === 2 ? 'equal' : layoutMode;
+        workspace.className = `multiview-workspace streams-${streamCount} layout-${effectiveLayout}`;
+
+        // Preserve current iframes to prevent reloads when changing layout/streams
+        const existingIframes = {};
+        workspace.querySelectorAll('.stream-panel.has-video').forEach(panel => {
+          const slot = panel.getAttribute('data-slot');
+          const iframe = panel.querySelector('iframe');
+          if (slot && iframe) {
+            existingIframes[slot] = iframe;
+          }
+        });
+
+        workspace.innerHTML = '';
+
+        for (let i = 1; i <= streamCount; i++) {
+          const slotIndex = i - 1;
+          const videoId = streams[slotIndex];
+
+          const panel = document.createElement('section');
+          panel.className = 'stream-panel';
+          panel.setAttribute('data-slot', String(i));
+
+          if (i === activeSlot) {
+            panel.classList.add('is-active');
+          }
+
+          if (videoId) {
+            panel.classList.add('has-video');
+
+            let iframe = existingIframes[String(i)];
+            if (!iframe || iframe.dataset.videoId !== videoId) {
+              iframe = document.createElement('iframe');
+              iframe.dataset.videoId = videoId;
+              const params = new URLSearchParams({
+                autoplay: '1',
+                mute: allMuted ? '1' : '0',
+                rel: '0',
+                playsinline: '1'
+              });
+
+              // Only append origin and enablejsapi if we are on a valid HTTP/HTTPS protocol
+              const isWebOrigin = window.location.origin && window.location.origin.startsWith('http');
+              if (isWebOrigin) {
+                params.set('enablejsapi', '1');
+                params.set('origin', window.location.origin);
+              }
+              iframe.src = `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
+              iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+              iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+              iframe.allowFullscreen = true;
+              iframe.title = `YouTube video ${i}`;
+              iframe.loading = 'eager';
+            }
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn-remove';
+            removeBtn.setAttribute('aria-label', `Remove stream ${i}`);
+            removeBtn.title = `Remove stream ${i}`;
+            removeBtn.textContent = '×';
+            removeBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              removeStream(i);
+            });
+
+            panel.appendChild(iframe);
+            panel.appendChild(removeBtn);
+          } else {
+            panel.classList.add('is-empty');
+            panel.setAttribute('tabindex', '0');
+            panel.setAttribute('role', 'button');
+            panel.setAttribute('aria-label', `Slot ${i}: Add Stream`);
+
+            panel.innerHTML = `
+              <div class="empty-state">
+                <svg class="plus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span class="add-stream-label">Add Stream</span>
+              </div>
+            `;
+
+            panel.addEventListener('click', () => openAddStreamModal(i));
+            panel.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openAddStreamModal(i);
+              }
+            });
+          }
+
+          workspace.appendChild(panel);
+        }
+      }
+
+      /**
+       * Toggle global audio mute/unmute.
+       */
+      function toggleMuteAll() {
+        const iframes = workspace.querySelectorAll('iframe');
+        if (!iframes.length) return;
+
+        allMuted = !allMuted;
+        iframes.forEach(iframe => {
+          sendYouTubeCommand(iframe, allMuted ? 'mute' : 'unMute');
+        });
+      }
+
+      /**
+       * Fullscreen handling.
        */
       async function enterFullscreen() {
         try {
           if (!document.fullscreenElement) {
             if (document.documentElement.requestFullscreen) {
               await document.documentElement.requestFullscreen();
-            } else if (grid.requestFullscreen) {
-              await grid.requestFullscreen();
+            } else if (workspace.requestFullscreen) {
+              await workspace.requestFullscreen();
             }
           }
-        } catch (error) {
-          console.warn(
-            'Fullscreen is not available:',
-            error
-          );
+        } catch (err) {
+          console.warn('Fullscreen error:', err);
         }
       }
 
-      /**
-       * Exit browser fullscreen.
-       */
       async function exitFullscreen() {
         try {
           if (document.fullscreenElement) {
             await document.exitFullscreen();
           }
-        } catch (error) {
-          console.warn(
-            'Unable to exit fullscreen:',
-            error
-          );
+        } catch (err) {
+          console.warn('Exit fullscreen error:', err);
         }
       }
 
-      /**
-       * Update fullscreen UI.
-       */
       function updateFullscreenUI() {
-        const isFullscreen =
-          Boolean(document.fullscreenElement);
-
-        document.body.classList.toggle(
-          'is-fullscreen',
-          isFullscreen
-        );
-
-        fullscreenButton.textContent =
-          isFullscreen
-            ? 'Thoát toàn màn hình'
-            : 'Toàn màn hình';
+        const isFs = Boolean(document.fullscreenElement);
+        document.body.classList.toggle('is-fullscreen', isFs);
       }
 
-      /**
-       * Toggle control panel.
-       */
-      toggleControlsButton.addEventListener(
-        'click',
-        () => {
-          setControlsVisible(
-            !controlsVisible
-          );
-        }
-      );
+      // Event Listeners: Stream Count Selector
+      streamCountButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const count = Number(btn.getAttribute('data-count'));
+          if (count && count !== streamCount) {
+            streamCount = count;
+            render();
+          }
+        });
+      });
 
-      /**
-       * Fullscreen buttons.
-       */
-      fullscreenButton.addEventListener(
-        'click',
-        () => {
+      // Event Listeners: Layout Selector
+      layoutButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const layout = btn.getAttribute('data-layout');
+          if (layout && layout !== layoutMode) {
+            layoutMode = layout;
+            render();
+          }
+        });
+      });
+
+      // Modal Events
+      modalForm.addEventListener('submit', saveStreamFromModal);
+      modalCloseBtn.addEventListener('click', closeAddStreamModal);
+      modalCancelBtn.addEventListener('click', closeAddStreamModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeAddStreamModal();
+      });
+
+      // Fullscreen Events
+      exitFullscreenBtn.addEventListener('click', exitFullscreen);
+      document.addEventListener('fullscreenchange', updateFullscreenUI);
+
+      // Keyboard Shortcuts
+      document.addEventListener('keydown', (e) => {
+        const activeTag = document.activeElement?.tagName;
+        const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
+
+        if (e.key === 'Escape') {
+          if (!modal.hidden) {
+            closeAddStreamModal();
+            return;
+          }
+          if (document.fullscreenElement) {
+            exitFullscreen();
+            return;
+          }
+        }
+
+        if (isTyping) return;
+
+        const key = e.key.toLowerCase();
+        if (key === 'm') {
+          toggleMuteAll();
+        } else if (key === 'f') {
           if (document.fullscreenElement) {
             exitFullscreen();
           } else {
             enterFullscreen();
           }
         }
-      );
+      });
 
-      exitFullscreenButton.addEventListener(
-        'click',
-        exitFullscreen
-      );
-
-      /**
-       * Fullscreen state changes, including Escape.
-       */
-      document.addEventListener(
-        'fullscreenchange',
-        updateFullscreenUI
-      );
-
-      /**
-       * Main controls.
-       */
-      loadButton.addEventListener(
-        'click',
-        render
-      );
-
-      clearButton.addEventListener(
-        'click',
-        clearAll
-      );
-
-      muteAllButton.addEventListener(
-        'click',
-        toggleMuteAll
-      );
-
-      count.addEventListener(
-        'change',
-        render
-      );
-
-      /**
-       * Enter key loads Multiview.
-       */
-      for (let i = 1; i <= MAX_VIDEOS; i++) {
-        const input =
-          document.getElementById(`url${i}`);
-
-        input.addEventListener(
-          'keydown',
-          event => {
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              render();
-            }
-          }
-        );
-      }
-
-      /**
-       * Keyboard shortcuts:
-       * H = show/hide controls
-       * F = fullscreen
-       * M = mute/unmute all
-       * Esc = browser handles fullscreen exit
-       */
-      document.addEventListener(
-        'keydown',
-        event => {
-          const tag =
-            document.activeElement?.tagName;
-
-          const typing =
-            tag === 'INPUT' ||
-            tag === 'TEXTAREA' ||
-            tag === 'SELECT';
-
-          if (typing) {
-            return;
-          }
-
-          const key =
-            event.key.toLowerCase();
-
-          if (key === 'h') {
-            setControlsVisible(
-              !controlsVisible
-            );
-          }
-
-          if (key === 'f') {
-            if (document.fullscreenElement) {
-              exitFullscreen();
-            } else {
-              enterFullscreen();
-            }
-          }
-
-          if (key === 'm') {
-            toggleMuteAll();
-          }
-        }
-      );
-
-      // Start with controls visible so the user can enter URLs.
-      setControlsVisible(true);
-
-      // Initial render.
+      // Initial Render
       render();
     })();
   </script>
