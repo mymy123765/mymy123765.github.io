@@ -3,9 +3,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-mymy123765.github.io-red?logo=youtube)](https://mymy123765.github.io)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-0-brightgreen.svg)](#)
+[![PWA Ready](https://img.shields.io/badge/PWA-Ready-purple.svg)](#)
 [![Mobile Friendly](https://img.shields.io/badge/Responsive-Mobile_%26_Desktop-orange.svg)](#)
 
-> **YouTube Multiview** là ứng dụng web gọn nhẹ, hiệu năng cao giúp bạn xem đồng thời tối đa **4 video hoặc livestream YouTube** trên cùng một màn hình với khả năng tự động canh chỉnh bố cục và hỗ trợ phím tắt tiện lợi.
+> **YouTube Multiview** là ứng dụng web gọn nhẹ, hiệu năng cao giúp bạn xem đồng thời **2, 3 hoặc 4 video / livestream YouTube** trên cùng một màn hình — với bố cục linh hoạt, modal thêm stream nhanh và phím tắt tiện lợi.
 
 🔗 **Trải nghiệm trực tiếp tại:** [https://mymy123765.github.io](https://mymy123765.github.io)
 
@@ -13,11 +14,12 @@
 
 ## ✨ Tính năng nổi bật
 
-- **Xem đa luồng linh hoạt**: Tùy chỉnh hiển thị từ **1 đến 4 video** cùng lúc, phù hợp theo dõi giải đấu Esports, tin tức nhiều góc máy, podcast hoặc livestream.
-- **Bố cục thích ứng (Responsive Grid)**:
-  - Tự động sắp xếp lưới tối ưu trên Desktop (1x1, 2x1, 2x2).
-  - Tối ưu cho thiết bị di động (Mobile dọc cuộn mượt mà, Mobile ngang tràn viền).
-  - Tương thích tốt với tai thỏ / Dynamic Island qua `env(safe-area-inset)`.
+- **Chọn số lượng stream**: Hiển thị **2, 3 hoặc 4** stream cùng lúc qua thanh điều khiển Streams trên toolbar.
+- **Hai chế độ bố cục (Layout)**:
+  - **Equal** — Chia đều không gian cho tất cả các stream.
+  - **Main** — Một stream chính chiếm ưu thế, các stream phụ xếp cột bên cạnh.
+  - *(Layout selector ẩn tự động khi chỉ có 2 streams.)*
+- **Thêm stream qua Modal**: Click vào ô trống bất kỳ → hộp thoại mở ra để dán link hoặc ID video.
 - **Hỗ trợ đa dạng định dạng link**:
   - `https://www.youtube.com/watch?v=ID`
   - `https://youtu.be/ID`
@@ -25,44 +27,71 @@
   - `https://www.youtube.com/live/ID`
   - `https://www.youtube.com/embed/ID`
   - Hoặc trực tiếp nhập **ID video (11 ký tự)**.
-- **Chế độ toàn màn hình (Fullscreen)**: Mở rộng tối đa không gian xem, ẩn thanh điều hướng.
-- **Điều khiển âm thanh đồng bộ**: Bật/tắt tiếng nhanh cho tất cả luồng phát thông qua YouTube Iframe API.
-- **Zero Dependencies**: 100% Vanilla HTML, CSS và JavaScript thuần — tải trang tức thì, không sử dụng framework nặng nề.
+- **Xóa stream nhanh**: Nút `×` xuất hiện khi hover góc trên phải của từng panel.
+- **Bố cục thích ứng (Responsive)**:
+  - Desktop: CSS Grid tối ưu từng kiểu bố cục.
+  - Mobile: Chuyển sang flex column, 16:9 aspect-ratio, cuộn mượt mà.
+  - Hỗ trợ tai thỏ / Dynamic Island qua `env(safe-area-inset)`.
+- **Chế độ toàn màn hình (Fullscreen)**: Toolbar ẩn, workspace mở rộng tối đa; nút "Thoát toàn màn hình" hiện ở góc dưới phải.
+- **Điều khiển âm thanh đồng bộ**: Mute/Unmute toàn bộ stream cùng lúc qua YouTube Iframe API (`postMessage`).
+- **PWA Ready**: Có `site.webmanifest` — có thể cài đặt như ứng dụng trên điện thoại / máy tính.
+- **Zero Dependencies**: 100% Vanilla HTML, CSS và JavaScript thuần — tải tức thì, không framework.
 
 ---
 
 ## ⌨️ Phím tắt nhanh (Keyboard Shortcuts)
 
-Để thao tác nhanh khi không tiện dùng chuột:
-
 | Phím tắt | Chức năng |
 | :---: | :--- |
-| <kbd>H</kbd> | Ẩn / hiện thanh bảng điều khiển (Header Controls) |
 | <kbd>F</kbd> | Bật / tắt chế độ toàn màn hình (Fullscreen) |
-| <kbd>M</kbd> | Bật / tắt tiếng tất cả các video đang phát |
-| <kbd>Enter</kbd> | Tải ngay Multiview khi đang gõ liên kết trong ô nhập |
-| <kbd>Esc</kbd> | Thoát chế độ toàn màn hình |
+| <kbd>M</kbd> | Mute / Unmute tất cả các stream đang phát |
+| <kbd>Esc</kbd> | Đóng modal Add Stream **hoặc** thoát toàn màn hình |
 
-*(Lưu ý: Các phím tắt đơn ký tự sẽ tạm tắt khi bạn đang tập trung gõ văn bản trong các ô nhập URL).*
+*(Phím tắt tự động bị tạm tắt khi bạn đang gõ trong ô nhập liệu của modal.)*
+
+---
+
+## 🗂️ Bố cục lưới (Grid Layouts)
+
+| Số stream | Equal | Main |
+| :---: | :--- | :--- |
+| **2** | 2 cột ngang bằng nhau (layout duy nhất) | — |
+| **3** | 2 trên + 1 giữa dưới | 1 lớn trái + 2 nhỏ xếp phải |
+| **4** | Lưới 2×2 | 1 lớn trái + 3 nhỏ xếp phải |
 
 ---
 
 ## 🚀 Hướng dẫn sử dụng
 
 1. Truy cập [https://mymy123765.github.io](https://mymy123765.github.io).
-2. Dán các đường dẫn YouTube bạn muốn xem vào các ô **Video 1, 2, 3, 4**.
-3. Chọn số lượng khung phát mong muốn (hoặc để mặc định 4).
-4. Nhấn **"Tải Multiview"** (hoặc bấm <kbd>Enter</kbd>).
-5. Bấm vào nút `×` ở từng góc video để xóa nhanh luồng phát đó.
+2. Chọn số lượng stream (**2 / 3 / 4**) trên thanh toolbar.
+3. Chọn kiểu bố cục (**Equal** hoặc **Main**) nếu dùng 3–4 streams.
+4. Click vào ô trống → Dán URL YouTube hoặc ID video → nhấn **Add Stream**.
+5. Bấm nút `×` (hover vào panel) để xóa stream bất kỳ.
+6. Nhấn <kbd>F</kbd> để vào toàn màn hình, <kbd>M</kbd> để mute/unmute tất cả, <kbd>Esc</kbd> để thoát modal hoặc fullscreen.
 
 ---
 
 ## 🛠️ Công nghệ xây dựng
 
-- **HTML5**: Cấu trúc ngữ nghĩa (Semantic HTML) & hỗ trợ SEO.
-- **CSS3**: CSS Grid, Flexbox, CSS Custom Properties, Safe Area Insets.
-- **JavaScript (ES6+)**: Xử lý DOM, Regular Expression phân tích URL, YouTube Iframe API `postMessage`.
-- **Deployment**: GitHub Pages.
+- **HTML5**: Semantic HTML, SEO meta tags, Open Graph, PWA Manifest.
+- **CSS3**: CSS Grid (multi-area layouts), Flexbox, CSS Custom Properties, `env(safe-area-inset)`, `100dvh`.
+- **JavaScript (ES6+)**: Vanilla JS, DOM manipulation, YouTube Iframe API (`postMessage`), `URL` API, Fullscreen API.
+- **Deployment**: GitHub Pages (zero-build, static).
+
+---
+
+## 📁 Cấu trúc dự án
+
+```
+mymy123765.github.io/
+├── index.html        # Toàn bộ ứng dụng (HTML + CSS + JS, single-file)
+├── favicon.svg       # Icon SVG
+├── site.webmanifest  # PWA manifest
+├── robots.txt        # SEO robots
+├── sitemap.xml       # SEO sitemap
+└── README.md
+```
 
 ---
 
