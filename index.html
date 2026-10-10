@@ -489,6 +489,52 @@
       line-height: 1.4;
     }
 
+    /* Link type toggle inside modal */
+    .link-type-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .link-type-group input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .link-type-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 5px;
+      border: 1px solid var(--border-btn);
+      background: var(--bg-control);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      user-select: none;
+    }
+
+    .link-type-label:hover {
+      border-color: #3b5cb8;
+      color: #a4c2ee;
+    }
+
+    .link-type-group input[type="radio"]:checked + .link-type-label {
+      background: var(--bg-control-active);
+      border-color: var(--border-active);
+      color: #ffffff;
+      box-shadow: 0 0 4px rgba(59,92,184,0.4);
+    }
+
+    .link-type-icon {
+      font-size: 13px;
+    }
+
     .modal-actions {
       display: flex;
       justify-content: flex-end;
@@ -525,6 +571,20 @@
 
     .btn-submit:hover {
       background: #202e6e;
+    }
+
+    /* Modal error message */
+    .modal-error {
+      font-size: 12px;
+      color: #e05c5c;
+      margin-top: 6px;
+      min-height: 16px;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .modal-error.visible {
+      display: block;
     }
 
     /* =========================================================
@@ -650,7 +710,19 @@
         <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Đóng hộp thoại">×</button>
       </div>
       <form id="addStreamForm" class="modal-form">
-        <label for="streamUrlInput" class="modal-label">YouTube Video URL hoặc Video ID</label>
+        <!-- Link Type Selector -->
+        <div class="link-type-group" role="group" aria-label="Loại link">
+          <input type="radio" name="linkType" id="typeYoutube" value="youtube" checked>
+          <label for="typeYoutube" class="link-type-label">
+            <span class="link-type-icon">▶</span> YouTube
+          </label>
+          <input type="radio" name="linkType" id="typeDirect" value="direct">
+          <label for="typeDirect" class="link-type-label">
+            <span class="link-type-icon">🔗</span> Direct Stream
+          </label>
+        </div>
+
+        <label for="streamUrlInput" class="modal-label" id="streamUrlLabel">YouTube Video URL hoặc Video ID</label>
         <input
           type="text"
           id="streamUrlInput"
@@ -658,9 +730,9 @@
           placeholder="https://www.youtube.com/watch?v=... hoặc ID video"
           autocomplete="off"
           spellcheck="false"
-          required
         >
-        <p class="modal-hint">Hỗ trợ link watch, youtu.be, live, shorts, embed và ID video 11 ký tự.</p>
+        <p class="modal-hint" id="streamUrlHint">Hỗ trợ link watch, youtu.be, live, shorts, embed và ID video 11 ký tự.</p>
+        <p class="modal-error" id="streamUrlError" role="alert" aria-live="polite"></p>
         <div class="modal-actions">
           <button type="button" class="btn-modal btn-cancel" id="modalCancelBtn">Hủy</button>
           <button type="submit" class="btn-modal btn-submit" id="modalSubmitBtn">Add Stream</button>
@@ -680,58 +752,93 @@
 
       const YOUTUBE_ORIGIN = 'https://www.youtube.com';
       const MAX_SLOTS = 4;
+      const STORAGE_KEY = 'multiview_state_v2';
 
-      // State
+      // -------------------------------------------------------
+      // State  (streams entries: { type: 'youtube'|'direct', src: string })
+      // -------------------------------------------------------
       let streamCount = 2;
-      let layoutMode = 'equal';
-      let streams = Array(MAX_SLOTS).fill(null);
-      let activeSlot = null;
-      let allMuted = true;
+      let layoutMode  = 'equal';
+      let streams     = Array(MAX_SLOTS).fill(null);  // null | { type, src }
+      let activeSlot  = null;
+      let allMuted    = true;
 
+      // -------------------------------------------------------
       // DOM Elements
-      const workspace = document.getElementById('workspace');
-      const layoutGroup = document.getElementById('layoutGroup');
+      // -------------------------------------------------------
+      const workspace          = document.getElementById('workspace');
+      const layoutGroup        = document.getElementById('layoutGroup');
       const streamCountButtons = document.querySelectorAll('#streamCountGroup button[data-count]');
-      const layoutButtons = document.querySelectorAll('#layoutGroup button[data-layout]');
+      const layoutButtons      = document.querySelectorAll('#layoutGroup button[data-layout]');
 
-      const modal = document.getElementById('addStreamModal');
-      const modalTitle = document.getElementById('modalTitle');
-      const modalForm = document.getElementById('addStreamForm');
-      const modalInput = document.getElementById('streamUrlInput');
-      const modalCloseBtn = document.getElementById('modalCloseBtn');
+      const modal          = document.getElementById('addStreamModal');
+      const modalTitle     = document.getElementById('modalTitle');
+      const modalForm      = document.getElementById('addStreamForm');
+      const modalInput     = document.getElementById('streamUrlInput');
+      const modalLabel     = document.getElementById('streamUrlLabel');
+      const modalHint      = document.getElementById('streamUrlHint');
+      const modalError     = document.getElementById('streamUrlError');
+      const modalCloseBtn  = document.getElementById('modalCloseBtn');
       const modalCancelBtn = document.getElementById('modalCancelBtn');
       const exitFullscreenBtn = document.getElementById('exitFullscreen');
 
-      /**
-       * Validate YouTube video ID (11 chars).
-       */
+      const radioYoutube = document.getElementById('typeYoutube');
+      const radioDirect  = document.getElementById('typeDirect');
+
+      // -------------------------------------------------------
+      // LocalStorage persistence
+      // -------------------------------------------------------
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ streamCount, layoutMode, streams }));
+        } catch (_) {}
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const s = JSON.parse(raw);
+          if (typeof s.streamCount === 'number' && s.streamCount >= 2 && s.streamCount <= 4) {
+            streamCount = s.streamCount;
+          }
+          if (s.layoutMode === 'equal' || s.layoutMode === 'main') {
+            layoutMode = s.layoutMode;
+          }
+          if (Array.isArray(s.streams)) {
+            for (let i = 0; i < MAX_SLOTS; i++) {
+              const entry = s.streams[i];
+              if (entry && (entry.type === 'youtube' || entry.type === 'direct') && typeof entry.src === 'string') {
+                streams[i] = { type: entry.type, src: entry.src };
+              } else {
+                streams[i] = null;
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      // -------------------------------------------------------
+      // YouTube ID helpers
+      // -------------------------------------------------------
       function isValidVideoId(id) {
         return typeof id === 'string' && /^[A-Za-z0-9_-]{11}$/.test(id);
       }
 
-      /**
-       * Extract a YouTube video ID from URL or return raw ID if valid.
-       */
       function getVideoId(value) {
         if (!value) return null;
         value = value.trim();
         if (isValidVideoId(value)) return value;
-
         try {
           const url = new URL(value);
           const hostname = url.hostname.toLowerCase();
-
-          // youtu.be/VIDEO_ID
           if (hostname === 'youtu.be' || hostname.endsWith('.youtu.be')) {
             const id = url.pathname.split('/').filter(Boolean)[0];
             return isValidVideoId(id) ? id : null;
           }
-
-          // youtube.com/...
           if (hostname === 'youtube.com' || hostname.endsWith('.youtube.com')) {
             const watchId = url.searchParams.get('v');
             if (watchId && isValidVideoId(watchId)) return watchId;
-
             const parts = url.pathname.split('/').filter(Boolean);
             const supportedTypes = ['embed', 'shorts', 'live'];
             const typeIndex = parts.findIndex(p => supportedTypes.includes(p.toLowerCase()));
@@ -740,99 +847,179 @@
               return isValidVideoId(id) ? id : null;
             }
           }
-        } catch {
-          return null;
-        }
-
+        } catch { return null; }
         return null;
       }
 
-      /**
-       * Send postMessage command to YouTube iframe player.
-       */
+      // -------------------------------------------------------
+      // Direct stream URL validation
+      // -------------------------------------------------------
+      function isValidDirectUrl(value) {
+        if (!value) return false;
+        value = value.trim();
+        try {
+          const url = new URL(value);
+          return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch { return false; }
+      }
+
+      // -------------------------------------------------------
+      // Duplicate detection
+      // -------------------------------------------------------
+      function findDuplicateSlot(type, src, excludeSlot) {
+        for (let i = 0; i < MAX_SLOTS; i++) {
+          if (i + 1 === excludeSlot) continue;
+          const s = streams[i];
+          if (s && s.type === type && s.src === src) return i + 1;
+        }
+        return null;
+      }
+
+      // -------------------------------------------------------
+      // postMessage helper for YouTube iframes
+      // -------------------------------------------------------
       function sendYouTubeCommand(iframe, func) {
         if (!iframe || !iframe.contentWindow) return;
         iframe.contentWindow.postMessage(
-          JSON.stringify({
-            event: 'command',
-            func,
-            args: []
-          }),
+          JSON.stringify({ event: 'command', func, args: [] }),
           YOUTUBE_ORIGIN
         );
       }
 
-      /**
-       * Open Add Stream dialog for slot index (1-based).
-       */
+      // -------------------------------------------------------
+      // Modal UI helpers
+      // -------------------------------------------------------
+      function getLinkType() {
+        return radioDirect.checked ? 'direct' : 'youtube';
+      }
+
+      function setLinkType(type) {
+        if (type === 'direct') {
+          radioDirect.checked = true;
+        } else {
+          radioYoutube.checked = true;
+        }
+        updateModalUI();
+      }
+
+      function updateModalUI() {
+        const isDirect = getLinkType() === 'direct';
+        if (isDirect) {
+          modalLabel.textContent = 'Direct Stream URL';
+          modalInput.placeholder = 'https://example.com/stream.m3u8 hoặc .mp4, .webm...';
+          modalHint.textContent  = 'Dán trực tiếp link stream mà bạn có thể mở thẳng trên trình duyệt.';
+        } else {
+          modalLabel.textContent = 'YouTube Video URL hoặc Video ID';
+          modalInput.placeholder = 'https://www.youtube.com/watch?v=... hoặc ID video';
+          modalHint.textContent  = 'Hỗ trợ link watch, youtu.be, live, shorts, embed và ID video 11 ký tự.';
+        }
+        clearModalError();
+      }
+
+      function showModalError(msg) {
+        modalError.textContent = msg;
+        modalError.classList.add('visible');
+        modalInput.focus();
+      }
+
+      function clearModalError() {
+        modalError.textContent = '';
+        modalError.classList.remove('visible');
+      }
+
+      // -------------------------------------------------------
+      // Open / Close modal
+      // -------------------------------------------------------
       function openAddStreamModal(slotNum) {
         activeSlot = slotNum;
         modalTitle.textContent = `Add Stream — Slot ${slotNum}`;
-        modalInput.value = streams[slotNum - 1] || '';
+
+        // Restore previous entry for this slot if any
+        const existing = streams[slotNum - 1];
+        if (existing) {
+          setLinkType(existing.type);
+          modalInput.value = existing.type === 'youtube' ? existing.src : existing.src;
+        } else {
+          setLinkType('youtube');
+          modalInput.value = '';
+        }
+        clearModalError();
         modal.hidden = false;
         renderActivePanelHighlight();
-        setTimeout(() => {
-          modalInput.focus();
-          modalInput.select();
-        }, 50);
+        setTimeout(() => { modalInput.focus(); modalInput.select(); }, 50);
       }
 
-      /**
-       * Close Add Stream dialog.
-       */
       function closeAddStreamModal() {
         modal.hidden = true;
+        clearModalError();
         renderActivePanelHighlight();
       }
 
-      /**
-       * Add stream to active slot.
-       */
+      // -------------------------------------------------------
+      // Save stream from modal
+      // -------------------------------------------------------
       function saveStreamFromModal(e) {
         e.preventDefault();
-        const value = modalInput.value.trim();
-        const videoId = getVideoId(value);
+        clearModalError();
+        const rawValue = modalInput.value.trim();
+        const type     = getLinkType();
 
-        if (activeSlot && videoId) {
-          streams[activeSlot - 1] = videoId;
-          closeAddStreamModal();
-          render();
-        } else if (!videoId) {
-          alert('Không tìm thấy Video ID YouTube hợp lệ. Vui lòng kiểm tra lại đường dẫn.');
+        if (!rawValue) {
+          showModalError('Vui lòng nhập link hoặc ID video.');
+          return;
         }
-      }
 
-      /**
-       * Remove stream from slot (1-based).
-       */
-      function removeStream(slotNum) {
-        streams[slotNum - 1] = null;
-        if (activeSlot === slotNum) {
-          activeSlot = null;
+        let src = null;
+
+        if (type === 'youtube') {
+          const videoId = getVideoId(rawValue);
+          if (!videoId) {
+            showModalError('Không tìm thấy Video ID YouTube hợp lệ. Vui lòng kiểm tra lại đường dẫn.');
+            return;
+          }
+          src = videoId;
+        } else {
+          if (!isValidDirectUrl(rawValue)) {
+            showModalError('URL không hợp lệ. Vui lòng nhập đường dẫn HTTP/HTTPS đầy đủ.');
+            return;
+          }
+          src = rawValue;
         }
+
+        // Duplicate check
+        const dupSlot = findDuplicateSlot(type, src, activeSlot);
+        if (dupSlot !== null) {
+          showModalError(`Link này đã được sử dụng ở Slot ${dupSlot}. Vui lòng chọn link khác.`);
+          return;
+        }
+
+        streams[activeSlot - 1] = { type, src };
+        saveState();
+        closeAddStreamModal();
         render();
       }
 
-      /**
-       * Update active highlight on panels.
-       */
+      // -------------------------------------------------------
+      // Remove stream (triggered by X button — full clear)
+      // -------------------------------------------------------
+      function removeStream(slotNum) {
+        streams[slotNum - 1] = null;
+        if (activeSlot === slotNum) activeSlot = null;
+        saveState();
+        render();
+      }
+
+      // -------------------------------------------------------
+      // Render helpers
+      // -------------------------------------------------------
       function renderActivePanelHighlight() {
-        const panels = workspace.querySelectorAll('.stream-panel');
-        panels.forEach(panel => {
+        workspace.querySelectorAll('.stream-panel').forEach(panel => {
           const slotNum = Number(panel.getAttribute('data-slot'));
-          if (slotNum === activeSlot) {
-            panel.classList.add('is-active');
-          } else {
-            panel.classList.remove('is-active');
-          }
+          panel.classList.toggle('is-active', slotNum === activeSlot);
         });
       }
 
-      /**
-       * Update Toolbar UI controls.
-       */
       function updateToolbarUI() {
-        // Stream count buttons
         streamCountButtons.forEach(btn => {
           const count = Number(btn.getAttribute('data-count'));
           const isActive = count === streamCount;
@@ -840,14 +1027,8 @@
           btn.setAttribute('aria-pressed', String(isActive));
         });
 
-        // Layout group visibility: Hidden when 2 streams (matching Image 1)
-        if (streamCount === 2) {
-          layoutGroup.style.display = 'none';
-        } else {
-          layoutGroup.style.display = 'inline-flex';
-        }
+        layoutGroup.style.display = streamCount === 2 ? 'none' : 'inline-flex';
 
-        // Layout buttons
         layoutButtons.forEach(btn => {
           const layout = btn.getAttribute('data-layout');
           const isActive = layout === layoutMode;
@@ -857,72 +1038,89 @@
       }
 
       /**
+       * Build an iframe for either YouTube or direct stream.
+       */
+      function buildIframe(entry, slotIndex) {
+        const iframe = document.createElement('iframe');
+        iframe.dataset.videoId = entry.src;
+        iframe.dataset.type    = entry.type;
+        iframe.referrerPolicy  = 'strict-origin-when-cross-origin';
+        iframe.allowFullscreen = true;
+        iframe.loading         = 'eager';
+        iframe.title           = `Stream ${slotIndex + 1}`;
+
+        if (entry.type === 'youtube') {
+          iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+          const params = new URLSearchParams({
+            autoplay: '1',
+            mute: allMuted ? '1' : '0',
+            rel: '0',
+            playsinline: '1'
+          });
+          const isWebOrigin = window.location.origin && window.location.origin.startsWith('http');
+          if (isWebOrigin) {
+            params.set('enablejsapi', '1');
+            params.set('origin', window.location.origin);
+          }
+          iframe.src = `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(entry.src)}?${params.toString()}`;
+        } else {
+          // Direct stream — embed via native <video> in srcdoc for best compatibility
+          iframe.allow = 'autoplay; fullscreen';
+          const safeUrl = entry.src.replace(/'/g, '%27');
+          iframe.srcdoc = [
+            '<!doctype html><html><head>',
+            '<meta name="viewport" content="width=device-width,initial-scale=1">',
+            '<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:#000}',
+            'video{width:100%;height:100%;object-fit:contain;display:block}</style></head><body>',
+            `<video src='${safeUrl}' autoplay muted playsinline controls></video>`,
+            '</body></html>'
+          ].join('');
+        }
+
+        return iframe;
+      }
+
+      /**
        * Render Multiview workspace panels and layout classes.
        */
       function render() {
         updateToolbarUI();
 
-        // Workspace CSS grid classes
         const effectiveLayout = streamCount === 2 ? 'equal' : layoutMode;
-        workspace.className = `multiview-workspace streams-${streamCount} layout-${effectiveLayout}`;
+        workspace.className   = `multiview-workspace streams-${streamCount} layout-${effectiveLayout}`;
 
-        // Preserve current iframes to prevent reloads when changing layout/streams
+        // Preserve existing iframes to avoid reloads
         const existingIframes = {};
         workspace.querySelectorAll('.stream-panel.has-video').forEach(panel => {
-          const slot = panel.getAttribute('data-slot');
+          const slot   = panel.getAttribute('data-slot');
           const iframe = panel.querySelector('iframe');
-          if (slot && iframe) {
-            existingIframes[slot] = iframe;
-          }
+          if (slot && iframe) existingIframes[slot] = iframe;
         });
 
         workspace.innerHTML = '';
 
         for (let i = 1; i <= streamCount; i++) {
           const slotIndex = i - 1;
-          const videoId = streams[slotIndex];
+          const entry     = streams[slotIndex]; // null | { type, src }
 
           const panel = document.createElement('section');
           panel.className = 'stream-panel';
           panel.setAttribute('data-slot', String(i));
+          if (i === activeSlot) panel.classList.add('is-active');
 
-          if (i === activeSlot) {
-            panel.classList.add('is-active');
-          }
-
-          if (videoId) {
+          if (entry) {
             panel.classList.add('has-video');
 
             let iframe = existingIframes[String(i)];
-            if (!iframe || iframe.dataset.videoId !== videoId) {
-              iframe = document.createElement('iframe');
-              iframe.dataset.videoId = videoId;
-              const params = new URLSearchParams({
-                autoplay: '1',
-                mute: allMuted ? '1' : '0',
-                rel: '0',
-                playsinline: '1'
-              });
-
-              // Only append origin and enablejsapi if we are on a valid HTTP/HTTPS protocol
-              const isWebOrigin = window.location.origin && window.location.origin.startsWith('http');
-              if (isWebOrigin) {
-                params.set('enablejsapi', '1');
-                params.set('origin', window.location.origin);
-              }
-              iframe.src = `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
-              iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-              iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-              iframe.allowFullscreen = true;
-              iframe.title = `YouTube video ${i}`;
-              iframe.loading = 'eager';
+            if (!iframe || iframe.dataset.videoId !== entry.src || iframe.dataset.type !== entry.type) {
+              iframe = buildIframe(entry, slotIndex);
             }
 
             const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
+            removeBtn.type      = 'button';
             removeBtn.className = 'btn-remove';
             removeBtn.setAttribute('aria-label', `Remove stream ${i}`);
-            removeBtn.title = `Remove stream ${i}`;
+            removeBtn.title     = `Xóa video khỏi Slot ${i}`;
             removeBtn.textContent = '×';
             removeBtn.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -936,7 +1134,6 @@
             panel.setAttribute('tabindex', '0');
             panel.setAttribute('role', 'button');
             panel.setAttribute('aria-label', `Slot ${i}: Add Stream`);
-
             panel.innerHTML = `
               <div class="empty-state">
                 <svg class="plus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -946,13 +1143,9 @@
                 <span class="add-stream-label">Add Stream</span>
               </div>
             `;
-
             panel.addEventListener('click', () => openAddStreamModal(i));
             panel.addEventListener('keydown', (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                openAddStreamModal(i);
-              }
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openAddStreamModal(i); }
             });
           }
 
@@ -960,116 +1153,141 @@
         }
       }
 
-      /**
-       * Toggle global audio mute/unmute.
-       */
+      // -------------------------------------------------------
+      // Toggle mute
+      // -------------------------------------------------------
       function toggleMuteAll() {
         const iframes = workspace.querySelectorAll('iframe');
         if (!iframes.length) return;
-
         allMuted = !allMuted;
         iframes.forEach(iframe => {
-          sendYouTubeCommand(iframe, allMuted ? 'mute' : 'unMute');
+          if (iframe.dataset.type === 'youtube') {
+            sendYouTubeCommand(iframe, allMuted ? 'mute' : 'unMute');
+          }
+          // Direct stream iframes get muted/unmuted via srcdoc video — limited control;
+          // a reload is required for full mute toggling on direct streams.
         });
       }
 
-      /**
-       * Fullscreen handling.
-       */
+      // -------------------------------------------------------
+      // Fullscreen
+      // -------------------------------------------------------
       async function enterFullscreen() {
         try {
           if (!document.fullscreenElement) {
-            if (document.documentElement.requestFullscreen) {
-              await document.documentElement.requestFullscreen();
-            } else if (workspace.requestFullscreen) {
-              await workspace.requestFullscreen();
-            }
+            if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+            else if (workspace.requestFullscreen) await workspace.requestFullscreen();
           }
-        } catch (err) {
-          console.warn('Fullscreen error:', err);
-        }
+        } catch (err) { console.warn('Fullscreen error:', err); }
       }
 
       async function exitFullscreen() {
         try {
-          if (document.fullscreenElement) {
-            await document.exitFullscreen();
-          }
-        } catch (err) {
-          console.warn('Exit fullscreen error:', err);
-        }
+          if (document.fullscreenElement) await document.exitFullscreen();
+        } catch (err) { console.warn('Exit fullscreen error:', err); }
       }
 
       function updateFullscreenUI() {
-        const isFs = Boolean(document.fullscreenElement);
-        document.body.classList.toggle('is-fullscreen', isFs);
+        document.body.classList.toggle('is-fullscreen', Boolean(document.fullscreenElement));
       }
 
-      // Event Listeners: Stream Count Selector
+      // -------------------------------------------------------
+      // Stream count change with conflict check
+      // -------------------------------------------------------
+      function tryChangeStreamCount(newCount) {
+        if (newCount === streamCount) return;
+
+        // Check how many slots (within new count range) are filled
+        // but first, check if slots BEYOND newCount have videos -> warn
+        const overflowSlots = [];
+        for (let i = newCount; i < streamCount; i++) {
+          if (streams[i]) overflowSlots.push(i + 1);
+        }
+
+        if (overflowSlots.length > 0) {
+          const slotNames = overflowSlots.join(', ');
+          const confirmed = window.confirm(
+            `Chuyển sang chế độ ${newCount} màn hình sẽ ẩn video ở Slot ${slotNames}.\n` +
+            `Các video này sẽ bị xóa khỏi danh sách. Bạn có chắc chắn không?`
+          );
+          if (!confirmed) return;
+          // Clear overflow slots
+          for (let i = newCount; i < MAX_SLOTS; i++) {
+            streams[i] = null;
+          }
+        }
+
+        streamCount = newCount;
+        saveState();
+        render();
+      }
+
+      // -------------------------------------------------------
+      // Event listeners
+      // -------------------------------------------------------
+
+      // Link type radio change → update modal labels
+      [radioYoutube, radioDirect].forEach(radio => {
+        radio.addEventListener('change', () => updateModalUI());
+      });
+
+      // Live validation on input (clear error while typing)
+      modalInput.addEventListener('input', clearModalError);
+
+      // Stream count selector
       streamCountButtons.forEach(btn => {
         btn.addEventListener('click', () => {
           const count = Number(btn.getAttribute('data-count'));
-          if (count && count !== streamCount) {
-            streamCount = count;
-            render();
-          }
+          if (count) tryChangeStreamCount(count);
         });
       });
 
-      // Event Listeners: Layout Selector
+      // Layout selector
       layoutButtons.forEach(btn => {
         btn.addEventListener('click', () => {
           const layout = btn.getAttribute('data-layout');
           if (layout && layout !== layoutMode) {
             layoutMode = layout;
+            saveState();
             render();
           }
         });
       });
 
-      // Modal Events
+      // Modal
       modalForm.addEventListener('submit', saveStreamFromModal);
       modalCloseBtn.addEventListener('click', closeAddStreamModal);
       modalCancelBtn.addEventListener('click', closeAddStreamModal);
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeAddStreamModal();
-      });
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeAddStreamModal(); });
 
-      // Fullscreen Events
+      // Fullscreen
       exitFullscreenBtn.addEventListener('click', exitFullscreen);
       document.addEventListener('fullscreenchange', updateFullscreenUI);
 
-      // Keyboard Shortcuts
+      // Keyboard shortcuts
       document.addEventListener('keydown', (e) => {
         const activeTag = document.activeElement?.tagName;
-        const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
+        const isTyping  = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
 
         if (e.key === 'Escape') {
-          if (!modal.hidden) {
-            closeAddStreamModal();
-            return;
-          }
-          if (document.fullscreenElement) {
-            exitFullscreen();
-            return;
-          }
+          if (!modal.hidden) { closeAddStreamModal(); return; }
+          if (document.fullscreenElement) { exitFullscreen(); return; }
         }
 
         if (isTyping) return;
 
         const key = e.key.toLowerCase();
-        if (key === 'm') {
-          toggleMuteAll();
-        } else if (key === 'f') {
-          if (document.fullscreenElement) {
-            exitFullscreen();
-          } else {
-            enterFullscreen();
-          }
+        if (key === 'm') toggleMuteAll();
+        else if (key === 'f') {
+          if (document.fullscreenElement) exitFullscreen();
+          else enterFullscreen();
         }
       });
 
-      // Initial Render
+      // -------------------------------------------------------
+      // Bootstrap
+      // -------------------------------------------------------
+      loadState();
       render();
     })();
   </script>
