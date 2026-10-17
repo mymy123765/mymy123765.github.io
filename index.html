@@ -703,76 +703,187 @@
     }
 
     /* =========================================================
-       ROTATE DEVICE NOTICE (MOBILE PORTRAIT)
+       FULLSCREEN ROTATE DEVICE LOCK OVERLAY (MOBILE PORTRAIT)
        ========================================================= */
 
-    .rotate-device-notice {
+    .rotate-device-overlay {
       display: none;
-      position: sticky;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 95;
-      background: linear-gradient(90deg, #070a1a 0%, #121942 50%, #070a1a 100%);
-      border-bottom: 1.5px solid var(--border-active);
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
-      padding: 10px 14px;
-      padding-top: max(10px, env(safe-area-inset-top));
-      color: #d6e2ff;
-      font-size: 12.5px;
-      line-height: 1.4;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 999999;
+      background: radial-gradient(circle at 50% 38%, #0f173d 0%, #05060b 82%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      text-align: center;
+      padding: 24px 20px;
+      padding-top: max(24px, env(safe-area-inset-top));
+      padding-bottom: max(24px, env(safe-area-inset-bottom));
+      padding-left: max(20px, env(safe-area-inset-left));
+      padding-right: max(20px, env(safe-area-inset-right));
+      box-sizing: border-box;
+      touch-action: none;
       user-select: none;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      flex-shrink: 0;
+      -webkit-user-select: none;
+      overscroll-behavior: none;
     }
 
-    .rotate-notice-icon-box {
+    .rotate-overlay-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+      margin: auto;
+      pointer-events: auto;
+      animation: rotateCardFadeIn 0.3s ease-out;
+    }
+
+    @keyframes rotateCardFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.94);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Animation: Rotating smartphone from vertical to horizontal */
+    .rotate-anim-wrapper {
+      position: relative;
+      width: 160px;
+      height: 160px;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      margin-bottom: 22px;
     }
 
-    .rotate-phone-icon {
-      width: 22px;
-      height: 22px;
-      stroke: #60a5fa;
-      animation: rotatePhoneAnim 3s infinite ease-in-out;
-      transform-origin: center;
+    .rotate-orbit-circle {
+      position: absolute;
+      width: 136px;
+      height: 136px;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(59, 92, 184, 0.45);
+      animation: rotatePulseOrbit 8s linear infinite;
     }
 
-    @keyframes rotatePhoneAnim {
-      0%, 15% {
-        transform: rotate(0deg);
+    @keyframes rotatePulseOrbit {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .rotate-arrow-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      animation: rotateArrowPulse 3.2s ease-in-out infinite;
+    }
+
+    @keyframes rotateArrowPulse {
+      0%, 100% { opacity: 0.55; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.04); }
+    }
+
+    .rotate-phone-box {
+      position: relative;
+      width: 72px;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center center;
+      animation: phoneTurnLandscape 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes phoneTurnLandscape {
+      0%, 18% {
+        transform: rotate(0deg) scale(1);
       }
-      45%, 70% {
-        transform: rotate(-90deg);
+      45%, 72% {
+        transform: rotate(-90deg) scale(1.08);
       }
-      90%, 100% {
-        transform: rotate(0deg);
+      92%, 100% {
+        transform: rotate(0deg) scale(1);
       }
     }
 
-    .rotate-notice-text strong {
-      color: #93c5fd;
+    .rotate-phone-svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 16px rgba(59, 92, 184, 0.6));
     }
 
-    .rotate-notice-text span {
+    .rotate-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: #60a5fa;
+      background: rgba(30, 58, 138, 0.35);
+      border: 1px solid rgba(59, 92, 184, 0.55);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .rotate-title {
+      font-size: 21px;
+      font-weight: 700;
       color: #ffffff;
-      font-weight: 600;
-      text-decoration: underline;
-      text-underline-offset: 2px;
+      margin-bottom: 10px;
+      letter-spacing: 0.2px;
+      line-height: 1.3;
     }
 
-    /* Show notice ONLY on mobile devices in portrait mode */
-    @media (max-width: 900px) and (orientation: portrait) {
-      .rotate-device-notice {
-        display: flex;
+    .rotate-desc {
+      font-size: 13.5px;
+      color: #8fa6cb;
+      line-height: 1.55;
+      margin-bottom: 18px;
+      padding: 0 4px;
+    }
+
+    .rotate-hint-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      background: rgba(14, 21, 52, 0.75);
+      border: 1px solid rgba(59, 92, 184, 0.35);
+      border-radius: 8px;
+      padding: 11px 13px;
+      font-size: 12px;
+      color: #7997c4;
+      line-height: 1.45;
+      text-align: left;
+    }
+
+    .rotate-hint-box .hint-icon {
+      flex-shrink: 0;
+      color: #60a5fa;
+      margin-top: 1px;
+    }
+
+    .rotate-hint-box strong {
+      color: #d6e2ff;
+    }
+
+    /* Lock overlay activates on mobile devices in portrait mode */
+    @media (max-width: 950px) and (orientation: portrait) {
+      .rotate-device-overlay {
+        display: flex !important;
+      }
+      body {
+        overflow: hidden !important;
       }
     }
 
@@ -802,7 +913,6 @@
       color: var(--text-primary);
     }
 
-    body.is-fullscreen .rotate-device-notice,
     body.is-fullscreen .multiview-toolbar {
       display: none;
     }
@@ -820,52 +930,110 @@
        MOBILE & RESPONSIVE ADJUSTMENTS
        ========================================================= */
 
-    @media (max-width: 768px) {
-      body {
-        overflow-y: auto;
-        height: auto;
-        min-height: 100dvh;
+    /* Optimized landscape mode for mobile devices (iOS Safari, Android Chrome) */
+    @media (orientation: landscape) and (max-height: 520px) {
+      html, body {
+        overflow: hidden !important;
+        height: 100% !important;
+        height: 100dvh !important;
       }
 
       .multiview-toolbar {
-        flex-wrap: wrap;
-        gap: 12px;
-        padding: 10px 8px;
+        padding: 4px 10px 4px 10px;
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+        padding-top: max(4px, env(safe-area-inset-top));
+        gap: 14px;
+      }
+
+      .control-label {
+        font-size: 12px;
+      }
+
+      .btn-segmented {
+        height: 22px;
+        padding: 2px 7px;
+        font-size: 11.5px;
       }
 
       .multiview-workspace {
-        display: flex;
-        flex-direction: column;
-        height: auto;
-        padding: 8px;
-        gap: 8px;
-        overflow: visible;
+        padding: 2px 8px 6px 8px;
+        padding-left: max(8px, env(safe-area-inset-left));
+        padding-right: max(8px, env(safe-area-inset-right));
+        padding-bottom: max(6px, env(safe-area-inset-bottom));
+        gap: 6px;
+        height: calc(100% - 34px);
       }
 
       .stream-panel {
-        aspect-ratio: 16 / 9;
-        min-height: 200px;
-        width: 100%;
+        min-height: 0;
+      }
+
+      .empty-state .plus-icon {
+        width: 26px;
+        height: 26px;
+      }
+
+      .empty-state .add-stream-label {
+        font-size: 13px;
+        margin-top: 8px;
       }
     }
   </style>
 </head>
 
 <body>
-  <!-- ROTATE DEVICE NOTICE (MOBILE PORTRAIT ONLY) -->
-  <aside id="rotateNotice" class="rotate-device-notice" role="status" aria-live="polite">
-    <div class="rotate-notice-icon-box">
-      <svg class="rotate-phone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="5" y="2" width="14" height="20" rx="3" />
-        <path d="M12 18h.01" />
-        <path d="M19 9l3-3-3-3" />
-        <path d="M22 6h-4" />
-      </svg>
+  <!-- FULLSCREEN ROTATE DEVICE LOCK OVERLAY (MOBILE PORTRAIT) -->
+  <div id="rotateNotice" class="rotate-device-overlay" role="dialog" aria-modal="true" aria-labelledby="rotateNoticeTitle" aria-describedby="rotateNoticeDesc">
+    <div class="rotate-overlay-card">
+      <!-- Animated Rotating Phone Graphic -->
+      <div class="rotate-anim-wrapper" aria-hidden="true">
+        <div class="rotate-orbit-circle"></div>
+        <div class="rotate-phone-box">
+          <svg class="rotate-phone-svg" viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Phone body -->
+            <rect x="4" y="4" width="72" height="112" rx="14" fill="#0c122a" stroke="#3b5cb8" stroke-width="3"/>
+            <!-- Screen area -->
+            <rect x="10" y="16" width="60" height="88" rx="6" fill="#04060d"/>
+            <!-- Dynamic Island / Camera pill -->
+            <rect x="30" y="8" width="20" height="4" rx="2" fill="#3b5cb8"/>
+            <!-- Multiview mini grid inside phone screen -->
+            <rect x="14" y="22" width="24" height="38" rx="3" fill="#182352" stroke="#293951" stroke-width="1"/>
+            <rect x="42" y="22" width="24" height="38" rx="3" fill="#182352" stroke="#293951" stroke-width="1"/>
+            <rect x="14" y="64" width="24" height="36" rx="3" fill="#182352" stroke="#293951" stroke-width="1"/>
+            <rect x="42" y="64" width="24" height="36" rx="3" fill="#182352" stroke="#293951" stroke-width="1"/>
+            <!-- Play triangle icon inside mini screen -->
+            <polygon points="23,38 23,44 29,41" fill="#60a5fa"/>
+            <polygon points="51,38 51,44 57,41" fill="#60a5fa"/>
+            <!-- Bottom bar indicator -->
+            <rect x="28" y="108" width="24" height="3" rx="1.5" fill="#3b5cb8"/>
+          </svg>
+        </div>
+        <!-- Orbiting curved rotation arrows -->
+        <svg class="rotate-arrow-svg" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 135 80 A 55 55 0 0 1 80 135" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 4"/>
+          <path d="M 25 80 A 55 55 0 0 1 80 25" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 4"/>
+          <polygon points="135,70 144,82 130,82" fill="#60a5fa"/>
+          <polygon points="25,90 16,78 30,78" fill="#60a5fa"/>
+        </svg>
+      </div>
+
+      <div class="rotate-badge">CHẾ ĐỘ MÀN HÌNH NGANG</div>
+      <h2 id="rotateNoticeTitle" class="rotate-title">Vui lòng xoay ngang thiết bị</h2>
+      <p id="rotateNoticeDesc" class="rotate-desc">
+        YouTube Multiview yêu cầu màn hình nằm ngang để xem đồng thời các luồng video tốt nhất và đầy đủ kích thước.
+      </p>
+
+      <div class="rotate-hint-box">
+        <svg class="hint-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span>Nếu đã xoay ngang mà bảng này chưa tắt, vui lòng bật tính năng <strong>Tự động xoay màn hình (Auto-rotate)</strong> trên điện thoại.</span>
+      </div>
     </div>
-    <div class="rotate-notice-text">
-      <strong>Gợi ý:</strong> Vui lòng <span>xoay ngang thiết bị</span> để có trải nghiệm xem Multiview tốt nhất.
-    </div>
-  </aside>
+  </div>
 
   <!-- TOOLBAR -->
   <header id="toolbar" class="multiview-toolbar" role="toolbar" aria-label="Multiview Toolbar">
@@ -1706,10 +1874,47 @@
       });
 
       // -------------------------------------------------------
+      // Device Orientation Lock Synchronizer
+      // Enforces full-screen lock on mobile portrait across Android & iOS
+      // -------------------------------------------------------
+      function syncOrientationLock() {
+        const overlay = document.getElementById('rotateNotice');
+        if (!overlay) return;
+
+        // Active when screen is mobile-sized (<= 950px) and in portrait orientation
+        const isMobileWidth = window.innerWidth <= 950 || window.innerHeight <= 950;
+        const isPortrait = window.matchMedia('(orientation: portrait)').matches ||
+                           (window.innerHeight > window.innerWidth);
+
+        const shouldLock = isMobileWidth && isPortrait;
+
+        if (shouldLock) {
+          overlay.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+          document.body.style.touchAction = 'none';
+        } else {
+          overlay.style.display = 'none';
+          document.body.style.overflow = '';
+          document.body.style.touchAction = '';
+        }
+      }
+
+      window.addEventListener('resize', syncOrientationLock, { passive: true });
+      window.addEventListener('orientationchange', () => {
+        syncOrientationLock();
+        setTimeout(syncOrientationLock, 120);
+        setTimeout(syncOrientationLock, 300);
+      });
+      if (window.screen && window.screen.orientation) {
+        window.screen.orientation.addEventListener('change', syncOrientationLock);
+      }
+
+      // -------------------------------------------------------
       // Bootstrap
       // -------------------------------------------------------
       loadState();
       render();
+      syncOrientationLock();
     })();
   </script>
 </body>
