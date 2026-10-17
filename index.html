@@ -492,6 +492,7 @@
     /* Link type toggle inside modal */
     .link-type-group {
       display: flex;
+      flex-wrap: wrap;
       gap: 6px;
       margin-bottom: 14px;
     }
@@ -507,8 +508,8 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 12px;
-      border-radius: 5px;
+      padding: 6px 12px;
+      border-radius: 6px;
       border: 1px solid var(--border-btn);
       background: var(--bg-control);
       color: var(--text-secondary);
@@ -528,18 +529,160 @@
       background: var(--bg-control-active);
       border-color: var(--border-active);
       color: #ffffff;
-      box-shadow: 0 0 4px rgba(59,92,184,0.4);
+      box-shadow: 0 0 6px rgba(59, 92, 184, 0.4);
     }
 
     .link-type-icon {
       font-size: 13px;
     }
 
+    /* Pop-up YouTube helper panel inside modal */
+    .yt-popup-panel {
+      background: rgba(14, 20, 48, 0.6);
+      border: 1px solid var(--border-panel);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+
+    .yt-popup-desc {
+      font-size: 12px;
+      color: #a4b7d6;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .yt-popup-desc strong {
+      color: #ffffff;
+    }
+
+    .yt-popup-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .yt-step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      color: #8fa6cb;
+      line-height: 1.4;
+    }
+
+    .yt-step-num {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #182559;
+      color: #60a5fa;
+      font-weight: 700;
+      font-size: 11px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #3b5cb8;
+    }
+
+    .yt-popup-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .btn-yt-launch {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #c41e1e;
+      border: 1px solid #e03232;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+    }
+
+    .btn-yt-launch:hover {
+      background: #e02828;
+      box-shadow: 0 0 10px rgba(224, 40, 40, 0.4);
+    }
+
+    .btn-yt-launch:active {
+      transform: scale(0.98);
+    }
+
+    .btn-yt-paste {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #101738;
+      border: 1px solid var(--border-active);
+      color: #d6e2ff;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-yt-paste:hover {
+      background: #172252;
+      color: #ffffff;
+    }
+
+    .yt-popup-status {
+      margin-top: 10px;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 5px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      line-height: 1.4;
+    }
+
+    .quick-tools-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .btn-quick-tool {
+      background: transparent;
+      border: 1px solid var(--border-btn);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 3px 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .btn-quick-tool:hover {
+      border-color: var(--border-active);
+      color: #ffffff;
+      background: #0d122b;
+    }
+
     .modal-actions {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      margin-top: 20px;
+      margin-top: 18px;
     }
 
     .btn-modal {
@@ -588,6 +731,80 @@
     }
 
     /* =========================================================
+       ROTATE DEVICE NOTICE (MOBILE PORTRAIT)
+       ========================================================= */
+
+    .rotate-device-notice {
+      display: none;
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 95;
+      background: linear-gradient(90deg, #070a1a 0%, #121942 50%, #070a1a 100%);
+      border-bottom: 1.5px solid var(--border-active);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
+      padding: 10px 14px;
+      padding-top: max(10px, env(safe-area-inset-top));
+      color: #d6e2ff;
+      font-size: 12.5px;
+      line-height: 1.4;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-align: center;
+      user-select: none;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      flex-shrink: 0;
+    }
+
+    .rotate-notice-icon-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .rotate-phone-icon {
+      width: 22px;
+      height: 22px;
+      stroke: #60a5fa;
+      animation: rotatePhoneAnim 3s infinite ease-in-out;
+      transform-origin: center;
+    }
+
+    @keyframes rotatePhoneAnim {
+      0%, 15% {
+        transform: rotate(0deg);
+      }
+      45%, 70% {
+        transform: rotate(-90deg);
+      }
+      90%, 100% {
+        transform: rotate(0deg);
+      }
+    }
+
+    .rotate-notice-text strong {
+      color: #93c5fd;
+    }
+
+    .rotate-notice-text span {
+      color: #ffffff;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    /* Show notice ONLY on mobile devices in portrait mode */
+    @media (max-width: 900px) and (orientation: portrait) {
+      .rotate-device-notice {
+        display: flex;
+      }
+    }
+
+    /* =========================================================
        FULLSCREEN UI
        ========================================================= */
 
@@ -613,6 +830,7 @@
       color: var(--text-primary);
     }
 
+    body.is-fullscreen .rotate-device-notice,
     body.is-fullscreen .multiview-toolbar {
       display: none;
     }
@@ -662,6 +880,21 @@
 </head>
 
 <body>
+  <!-- ROTATE DEVICE NOTICE (MOBILE PORTRAIT ONLY) -->
+  <aside id="rotateNotice" class="rotate-device-notice" role="status" aria-live="polite">
+    <div class="rotate-notice-icon-box">
+      <svg class="rotate-phone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="3" />
+        <path d="M12 18h.01" />
+        <path d="M19 9l3-3-3-3" />
+        <path d="M22 6h-4" />
+      </svg>
+    </div>
+    <div class="rotate-notice-text">
+      <strong>Gợi ý:</strong> Vui lòng <span>xoay ngang thiết bị</span> để có trải nghiệm xem Multiview tốt nhất.
+    </div>
+  </aside>
+
   <!-- TOOLBAR -->
   <header id="toolbar" class="multiview-toolbar" role="toolbar" aria-label="Multiview Toolbar">
     <!-- Stream Count Selector -->
@@ -710,16 +943,65 @@
         <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Đóng hộp thoại">×</button>
       </div>
       <form id="addStreamForm" class="modal-form">
-        <!-- Link Type Selector -->
-        <div class="link-type-group" role="group" aria-label="Loại link">
+        <!-- Link Type Selector: 3 options -->
+        <div class="link-type-group" role="group" aria-label="Loại nguồn phát">
           <input type="radio" name="linkType" id="typeYoutube" value="youtube" checked>
           <label for="typeYoutube" class="link-type-label">
-            <span class="link-type-icon">▶</span> YouTube
+            <span class="link-type-icon">▶</span> Dán link YouTube
           </label>
+
+          <input type="radio" name="linkType" id="typeYtPopup" value="yt_popup">
+          <label for="typeYtPopup" class="link-type-label">
+            <span class="link-type-icon">🪟</span> Pop-up YouTube
+          </label>
+
           <input type="radio" name="linkType" id="typeDirect" value="direct">
           <label for="typeDirect" class="link-type-label">
             <span class="link-type-icon">🔗</span> Direct Stream
           </label>
+        </div>
+
+        <!-- YouTube Pop-up Helper Panel (visible when Pop-up YouTube is selected) -->
+        <div id="ytPopupPanel" class="yt-popup-panel" hidden>
+          <p class="yt-popup-desc">
+            Mở cửa sổ YouTube trực tiếp trên trình duyệt. Hỗ trợ đầy đủ cho người dùng <strong>đã đăng nhập</strong> (xem video đề xuất, kênh đăng ký, lịch sử) lẫn <strong>chưa đăng nhập</strong>.
+          </p>
+          <div class="yt-popup-steps">
+            <div class="yt-step-item">
+              <span class="yt-step-num">1</span>
+              <span>Bấm <strong>Mở Pop-up YouTube</strong> để tìm và mở video mong muốn.</span>
+            </div>
+            <div class="yt-step-item">
+              <span class="yt-step-num">2</span>
+              <span>Bấm <strong>Chia sẻ</strong> hoặc sao chép liên kết video / mã nhúng (embed).</span>
+            </div>
+            <div class="yt-step-item">
+              <span class="yt-step-num">3</span>
+              <span>Quay lại đây và bấm <strong>Dán từ Clipboard</strong> (hoặc tự nhận diện).</span>
+            </div>
+          </div>
+          <div class="yt-popup-buttons">
+            <button type="button" class="btn-yt-launch" id="btnOpenYtPopup">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+              Mở Pop-up YouTube
+            </button>
+            <button type="button" class="btn-yt-paste" id="btnPasteClipboard">
+              📋 Dán từ Clipboard
+            </button>
+          </div>
+          <div id="ytPopupStatus" class="yt-popup-status" hidden></div>
+        </div>
+
+        <!-- Quick tools row for manual paste mode -->
+        <div id="quickToolsRow" class="quick-tools-row">
+          <button type="button" class="btn-quick-tool" id="btnQuickOpenPopup" title="Mở pop-up YouTube để tìm video">
+            🪟 Mở YouTube
+          </button>
+          <button type="button" class="btn-quick-tool" id="btnQuickPaste" title="Dán nhanh từ Clipboard">
+            📋 Dán nhanh
+          </button>
         </div>
 
         <label for="streamUrlInput" class="modal-label" id="streamUrlLabel">YouTube Video URL hoặc Video ID</label>
@@ -731,7 +1013,7 @@
           autocomplete="off"
           spellcheck="false"
         >
-        <p class="modal-hint" id="streamUrlHint">Hỗ trợ link watch, youtu.be, live, shorts, embed và ID video 11 ký tự.</p>
+        <p class="modal-hint" id="streamUrlHint">Hỗ trợ link watch, youtu.be, live, shorts, mã nhúng embed và ID 11 ký tự.</p>
         <p class="modal-error" id="streamUrlError" role="alert" aria-live="polite"></p>
         <div class="modal-actions">
           <button type="button" class="btn-modal btn-cancel" id="modalCancelBtn">Hủy</button>
@@ -771,19 +1053,28 @@
       const streamCountButtons = document.querySelectorAll('#streamCountGroup button[data-count]');
       const layoutButtons      = document.querySelectorAll('#layoutGroup button[data-layout]');
 
-      const modal          = document.getElementById('addStreamModal');
-      const modalTitle     = document.getElementById('modalTitle');
-      const modalForm      = document.getElementById('addStreamForm');
-      const modalInput     = document.getElementById('streamUrlInput');
-      const modalLabel     = document.getElementById('streamUrlLabel');
-      const modalHint      = document.getElementById('streamUrlHint');
-      const modalError     = document.getElementById('streamUrlError');
-      const modalCloseBtn  = document.getElementById('modalCloseBtn');
-      const modalCancelBtn = document.getElementById('modalCancelBtn');
-      const exitFullscreenBtn = document.getElementById('exitFullscreen');
+      const modal               = document.getElementById('addStreamModal');
+      const modalTitle          = document.getElementById('modalTitle');
+      const modalForm           = document.getElementById('addStreamForm');
+      const modalInput          = document.getElementById('streamUrlInput');
+      const modalLabel          = document.getElementById('streamUrlLabel');
+      const modalHint           = document.getElementById('streamUrlHint');
+      const modalError          = document.getElementById('streamUrlError');
+      const modalCloseBtn       = document.getElementById('modalCloseBtn');
+      const modalCancelBtn      = document.getElementById('modalCancelBtn');
+      const exitFullscreenBtn   = document.getElementById('exitFullscreen');
 
-      const radioYoutube = document.getElementById('typeYoutube');
-      const radioDirect  = document.getElementById('typeDirect');
+      const radioYoutube        = document.getElementById('typeYoutube');
+      const radioYtPopup        = document.getElementById('typeYtPopup');
+      const radioDirect         = document.getElementById('typeDirect');
+
+      const ytPopupPanel        = document.getElementById('ytPopupPanel');
+      const ytPopupStatus       = document.getElementById('ytPopupStatus');
+      const btnOpenYtPopup      = document.getElementById('btnOpenYtPopup');
+      const btnPasteClipboard   = document.getElementById('btnPasteClipboard');
+      const quickToolsRow       = document.getElementById('quickToolsRow');
+      const btnQuickOpenPopup   = document.getElementById('btnQuickOpenPopup');
+      const btnQuickPaste       = document.getElementById('btnQuickPaste');
 
       // -------------------------------------------------------
       // LocalStorage persistence
@@ -819,7 +1110,8 @@
       }
 
       // -------------------------------------------------------
-      // YouTube ID helpers
+      // YouTube ID helpers (supports direct ID, standard URLs,
+      // mobile m.youtube.com, and <iframe> embed snippets)
       // -------------------------------------------------------
       function isValidVideoId(id) {
         return typeof id === 'string' && /^[A-Za-z0-9_-]{11}$/.test(id);
@@ -828,17 +1120,46 @@
       function getVideoId(value) {
         if (!value) return null;
         value = value.trim();
+
+        // 1. Direct 11-char ID
         if (isValidVideoId(value)) return value;
+
+        // 2. Extract src attribute if an iframe embed code was pasted
+        const iframeMatch = value.match(/src=["']([^"']+)["']/i);
+        if (iframeMatch) {
+          value = iframeMatch[1];
+        }
+
+        // 3. Fast regex matches for standard YouTube link patterns
+        const regexPatterns = [
+          /(?:https?:\/\/)?(?:www\.|m\.)?youtube\.com\/watch\?(?:[^&]+&)*v=([A-Za-z0-9_-]{11})/i,
+          /(?:https?:\/\/)?youtu\.be\/([A-Za-z0-9_-]{11})/i,
+          /(?:https?:\/\/)?(?:www\.|m\.)?youtube\.com\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{11})/i
+        ];
+
+        for (const regex of regexPatterns) {
+          const match = value.match(regex);
+          if (match && isValidVideoId(match[1])) {
+            return match[1];
+          }
+        }
+
+        // 4. Safe URL parser fallback
         try {
           const url = new URL(value);
           const hostname = url.hostname.toLowerCase();
+
+          // youtu.be/VIDEO_ID
           if (hostname === 'youtu.be' || hostname.endsWith('.youtu.be')) {
             const id = url.pathname.split('/').filter(Boolean)[0];
             return isValidVideoId(id) ? id : null;
           }
+
+          // youtube.com or m.youtube.com
           if (hostname === 'youtube.com' || hostname.endsWith('.youtube.com')) {
             const watchId = url.searchParams.get('v');
             if (watchId && isValidVideoId(watchId)) return watchId;
+
             const parts = url.pathname.split('/').filter(Boolean);
             const supportedTypes = ['embed', 'shorts', 'live'];
             const typeIndex = parts.findIndex(p => supportedTypes.includes(p.toLowerCase()));
@@ -847,7 +1168,10 @@
               return isValidVideoId(id) ? id : null;
             }
           }
-        } catch { return null; }
+        } catch {
+          return null;
+        }
+
         return null;
       }
 
@@ -860,7 +1184,9 @@
         try {
           const url = new URL(value);
           return url.protocol === 'http:' || url.protocol === 'https:';
-        } catch { return false; }
+        } catch {
+          return false;
+        }
       }
 
       // -------------------------------------------------------
@@ -887,15 +1213,19 @@
       }
 
       // -------------------------------------------------------
-      // Modal UI helpers
+      // Modal UI helpers & Tab switching
       // -------------------------------------------------------
       function getLinkType() {
-        return radioDirect.checked ? 'direct' : 'youtube';
+        if (radioDirect.checked) return 'direct';
+        if (radioYtPopup.checked) return 'yt_popup';
+        return 'youtube';
       }
 
       function setLinkType(type) {
         if (type === 'direct') {
           radioDirect.checked = true;
+        } else if (type === 'yt_popup') {
+          radioYtPopup.checked = true;
         } else {
           radioYoutube.checked = true;
         }
@@ -903,17 +1233,29 @@
       }
 
       function updateModalUI() {
-        const isDirect = getLinkType() === 'direct';
-        if (isDirect) {
+        const type = getLinkType();
+        clearModalError();
+        clearPopupStatus();
+
+        if (type === 'direct') {
+          ytPopupPanel.hidden = true;
+          quickToolsRow.hidden = true;
           modalLabel.textContent = 'Direct Stream URL';
           modalInput.placeholder = 'https://example.com/stream.m3u8 hoặc .mp4, .webm...';
           modalHint.textContent  = 'Dán trực tiếp link stream mà bạn có thể mở thẳng trên trình duyệt.';
+        } else if (type === 'yt_popup') {
+          ytPopupPanel.hidden = false;
+          quickToolsRow.hidden = true;
+          modalLabel.textContent = 'Link hoặc ID video nhận được từ YouTube';
+          modalInput.placeholder = 'Link video sau khi copy từ pop-up YouTube...';
+          modalHint.textContent  = 'Bấm "Mở Pop-up YouTube", copy link video rồi bấm "Dán từ Clipboard".';
         } else {
+          ytPopupPanel.hidden = true;
+          quickToolsRow.hidden = false;
           modalLabel.textContent = 'YouTube Video URL hoặc Video ID';
           modalInput.placeholder = 'https://www.youtube.com/watch?v=... hoặc ID video';
-          modalHint.textContent  = 'Hỗ trợ link watch, youtu.be, live, shorts, embed và ID video 11 ký tự.';
+          modalHint.textContent  = 'Hỗ trợ link watch, youtu.be, live, shorts, mã nhúng embed và ID 11 ký tự.';
         }
-        clearModalError();
       }
 
       function showModalError(msg) {
@@ -927,6 +1269,84 @@
         modalError.classList.remove('visible');
       }
 
+      function showPopupStatus(msg) {
+        ytPopupStatus.textContent = msg;
+        ytPopupStatus.hidden = false;
+      }
+
+      function clearPopupStatus() {
+        ytPopupStatus.textContent = '';
+        ytPopupStatus.hidden = true;
+      }
+
+      // -------------------------------------------------------
+      // YouTube Pop-up Window Launcher
+      // Works on PC (centered popup window) and Mobile (new tab/window)
+      // Supports users logged-in to YouTube and guests alike!
+      // -------------------------------------------------------
+      function openYouTubePopup() {
+        clearModalError();
+        const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (window.innerWidth <= 768);
+        const targetUrl = isMobile ? 'https://m.youtube.com' : 'https://www.youtube.com';
+
+        if (isMobile) {
+          window.open(targetUrl, '_blank');
+        } else {
+          const width = 1040;
+          const height = 720;
+          const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2));
+          const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2));
+          const popup = window.open(
+            targetUrl,
+            'YouTubePickerWindow',
+            `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=yes,status=no,resizable=yes,scrollbars=yes`
+          );
+          if (popup) {
+            try { popup.focus(); } catch (_) {}
+          }
+        }
+
+        showPopupStatus('Đang mở cửa sổ YouTube. Hãy chọn video bạn thích, sao chép link và bấm "Dán từ Clipboard".');
+      }
+
+      // -------------------------------------------------------
+      // Clipboard Reader Helper
+      // -------------------------------------------------------
+      async function pasteFromClipboard() {
+        clearModalError();
+        try {
+          if (!navigator.clipboard || !navigator.clipboard.readText) {
+            modalInput.focus();
+            showModalError('Trình duyệt chặn đọc clipboard tự động. Vui lòng bấm giữ hoặc nhấn Ctrl+V để dán.');
+            return;
+          }
+          const text = await navigator.clipboard.readText();
+          if (!text || !text.trim()) {
+            showModalError('Bộ nhớ tạm (Clipboard) đang trống. Hãy sao chép link video YouTube trước.');
+            return;
+          }
+          const trimmed = text.trim();
+          modalInput.value = trimmed;
+
+          const currentType = getLinkType();
+          if (currentType === 'direct') {
+            if (isValidDirectUrl(trimmed)) {
+              showPopupStatus('Đã dán đường dẫn Direct Stream thành công.');
+            }
+          } else {
+            const vId = getVideoId(trimmed);
+            if (vId) {
+              showPopupStatus(`Đã nhận diện Video ID: ${vId}! Bấm "Add Stream" để đưa video vào khay.`);
+            } else {
+              showModalError('Nội dung vừa dán chưa đúng định dạng link hoặc ID YouTube.');
+            }
+          }
+        } catch (err) {
+          modalInput.focus();
+          showModalError('Không thể đọc Clipboard (cần cấp quyền truy cập). Vui lòng nhấn Ctrl+V để dán thủ công.');
+        }
+      }
+
       // -------------------------------------------------------
       // Open / Close modal
       // -------------------------------------------------------
@@ -934,24 +1354,28 @@
         activeSlot = slotNum;
         modalTitle.textContent = `Add Stream — Slot ${slotNum}`;
 
-        // Restore previous entry for this slot if any
         const existing = streams[slotNum - 1];
         if (existing) {
-          setLinkType(existing.type);
-          modalInput.value = existing.type === 'youtube' ? existing.src : existing.src;
+          setLinkType(existing.type === 'direct' ? 'direct' : 'youtube');
+          modalInput.value = existing.src || '';
         } else {
           setLinkType('youtube');
           modalInput.value = '';
         }
         clearModalError();
+        clearPopupStatus();
         modal.hidden = false;
         renderActivePanelHighlight();
-        setTimeout(() => { modalInput.focus(); modalInput.select(); }, 50);
+        setTimeout(() => {
+          modalInput.focus();
+          modalInput.select();
+        }, 50);
       }
 
       function closeAddStreamModal() {
         modal.hidden = true;
         clearModalError();
+        clearPopupStatus();
         renderActivePanelHighlight();
       }
 
@@ -962,16 +1386,17 @@
         e.preventDefault();
         clearModalError();
         const rawValue = modalInput.value.trim();
-        const type     = getLinkType();
+        const currentType = getLinkType();
+        const finalType = (currentType === 'direct') ? 'direct' : 'youtube';
 
         if (!rawValue) {
-          showModalError('Vui lòng nhập link hoặc ID video.');
+          showModalError('Vui lòng nhập hoặc dán link video.');
           return;
         }
 
         let src = null;
 
-        if (type === 'youtube') {
+        if (finalType === 'youtube') {
           const videoId = getVideoId(rawValue);
           if (!videoId) {
             showModalError('Không tìm thấy Video ID YouTube hợp lệ. Vui lòng kiểm tra lại đường dẫn.');
@@ -987,13 +1412,13 @@
         }
 
         // Duplicate check
-        const dupSlot = findDuplicateSlot(type, src, activeSlot);
+        const dupSlot = findDuplicateSlot(finalType, src, activeSlot);
         if (dupSlot !== null) {
           showModalError(`Link này đã được sử dụng ở Slot ${dupSlot}. Vui lòng chọn link khác.`);
           return;
         }
 
-        streams[activeSlot - 1] = { type, src };
+        streams[activeSlot - 1] = { type: finalType, src };
         saveState();
         closeAddStreamModal();
         render();
@@ -1101,7 +1526,7 @@
 
         for (let i = 1; i <= streamCount; i++) {
           const slotIndex = i - 1;
-          const entry     = streams[slotIndex]; // null | { type, src }
+          const entry     = streams[slotIndex];
 
           const panel = document.createElement('section');
           panel.className = 'stream-panel';
@@ -1164,8 +1589,6 @@
           if (iframe.dataset.type === 'youtube') {
             sendYouTubeCommand(iframe, allMuted ? 'mute' : 'unMute');
           }
-          // Direct stream iframes get muted/unmuted via srcdoc video — limited control;
-          // a reload is required for full mute toggling on direct streams.
         });
       }
 
@@ -1197,8 +1620,6 @@
       function tryChangeStreamCount(newCount) {
         if (newCount === streamCount) return;
 
-        // Check how many slots (within new count range) are filled
-        // but first, check if slots BEYOND newCount have videos -> warn
         const overflowSlots = [];
         for (let i = newCount; i < streamCount; i++) {
           if (streams[i]) overflowSlots.push(i + 1);
@@ -1211,7 +1632,6 @@
             `Các video này sẽ bị xóa khỏi danh sách. Bạn có chắc chắn không?`
           );
           if (!confirmed) return;
-          // Clear overflow slots
           for (let i = newCount; i < MAX_SLOTS; i++) {
             streams[i] = null;
           }
@@ -1226,9 +1646,56 @@
       // Event listeners
       // -------------------------------------------------------
 
-      // Link type radio change → update modal labels
-      [radioYoutube, radioDirect].forEach(radio => {
+      // Link type radio change → update modal labels & panel visibility
+      [radioYoutube, radioYtPopup, radioDirect].forEach(radio => {
         radio.addEventListener('change', () => updateModalUI());
+      });
+
+      // YouTube Pop-up action buttons
+      btnOpenYtPopup.addEventListener('click', openYouTubePopup);
+      btnPasteClipboard.addEventListener('click', pasteFromClipboard);
+      btnQuickOpenPopup.addEventListener('click', openYouTubePopup);
+      btnQuickPaste.addEventListener('click', pasteFromClipboard);
+
+      // Auto-detect YouTube link on window focus (when user switches back from YouTube popup)
+      window.addEventListener('focus', async () => {
+        if (modal.hidden) return;
+        const currentType = getLinkType();
+        if (currentType === 'direct') return;
+        if (modalInput.value.trim()) return; // Don't overwrite if user already typed
+
+        try {
+          if (navigator.clipboard && navigator.clipboard.readText) {
+            const text = await navigator.clipboard.readText();
+            if (text && text.trim()) {
+              const vId = getVideoId(text.trim());
+              if (vId) {
+                modalInput.value = text.trim();
+                showPopupStatus(`Tự động nhận diện link YouTube vừa sao chép (${vId})! Bấm "Add Stream" để xem.`);
+              }
+            }
+          }
+        } catch (_) {
+          // Ignore permissions prompt errors on background auto-focus
+        }
+      });
+
+      // Drag and Drop support into modal
+      modal.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+      });
+
+      modal.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text/uri-list');
+        if (text) {
+          modalInput.value = text.trim();
+          const vId = getVideoId(text.trim());
+          if (vId) {
+            showPopupStatus(`Đã nhận link từ thao tác kéo thả (${vId})! Bấm "Add Stream" để hoàn tất.`);
+          }
+        }
       });
 
       // Live validation on input (clear error while typing)
@@ -1254,7 +1721,7 @@
         });
       });
 
-      // Modal
+      // Modal form events
       modalForm.addEventListener('submit', saveStreamFromModal);
       modalCloseBtn.addEventListener('click', closeAddStreamModal);
       modalCancelBtn.addEventListener('click', closeAddStreamModal);

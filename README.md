@@ -19,14 +19,13 @@
   - **Equal** — Chia đều không gian cho tất cả các stream.
   - **Main** — Một stream chính chiếm ưu thế, các stream phụ xếp cột bên cạnh.
   - *(Layout selector ẩn tự động khi chỉ có 2 streams.)*
-- **Thêm stream qua Modal**: Click vào ô trống bất kỳ → hộp thoại mở ra để dán link hoặc ID video.
-- **Hỗ trợ đa dạng định dạng link**:
-  - `https://www.youtube.com/watch?v=ID`
-  - `https://youtu.be/ID`
-  - `https://www.youtube.com/shorts/ID`
-  - `https://www.youtube.com/live/ID`
-  - `https://www.youtube.com/embed/ID`
-  - Hoặc trực tiếp nhập **ID video (11 ký tự)**.
+- **Hỗ trợ 3 tùy chọn thêm stream linh hoạt**:
+  - **▶ Dán link YouTube**: Hỗ trợ mọi định dạng (`watch`, `youtu.be`, `shorts`, `live`, mã nhúng `<iframe> embed` và ID video 11 ký tự).
+  - **🪟 Pop-up YouTube**: Mở pop-up duyệt YouTube trực tiếp (hỗ trợ cả tài khoản Google đã đăng nhập lẫn chưa đăng nhập) và nhận diện link nhanh qua Clipboard / Drag & Drop.
+  - **🔗 Direct Stream**: Hỗ trợ các link stream phát trực tiếp trên trình duyệt (`.m3u8`, `.mp4`, `.webm`...).
+- **Lưu trạng thái sau F5 (LocalStorage)**: Giữ nguyên cấu hình và video đã điền; chỉ xóa hoàn toàn khi bấm nút `×` trên từng ô stream.
+- **Kiểm tra trùng lặp & Logic an toàn**: Cảnh báo khi nhập link trùng lặp hoặc khi thu hẹp số màn hình làm ẩn các slot đang có video.
+- **Thông báo xoay ngang thiết bị trên Mobile**: Tự động hiển thị lời nhắc xoay ngang khi dùng thiết bị di động ở chế độ dọc (portrait), tự ẩn khi xoay ngang và tự hiện lại nếu xoay dọc trở lại.
 - **Xóa stream nhanh**: Nút `×` xuất hiện khi hover góc trên phải của từng panel.
 - **Bố cục thích ứng (Responsive)**:
   - Desktop: CSS Grid tối ưu từng kiểu bố cục.
