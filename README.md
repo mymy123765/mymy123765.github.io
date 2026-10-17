@@ -1,99 +1,54 @@
 # 📺 YouTube Multiview
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/Live_Demo-mymy123765.github.io-red?logo=youtube)](https://mymy123765.github.io)
-[![Zero Dependencies](https://img.shields.io/badge/Dependencies-0-brightgreen.svg)](#)
-[![PWA Ready](https://img.shields.io/badge/PWA-Ready-purple.svg)](#)
-[![Mobile Friendly](https://img.shields.io/badge/Responsive-Mobile_%26_Desktop-orange.svg)](#)
+> Xem đồng thời **2, 3 hoặc 4 video / livestream** (YouTube & Direct Stream) trên cùng một màn hình với bố cục linh hoạt, lưu trạng thái tự động và tối ưu cho cả PC lẫn Mobile.
 
-> **YouTube Multiview** là ứng dụng web gọn nhẹ, hiệu năng cao giúp bạn xem đồng thời **2, 3 hoặc 4 video / livestream YouTube** trên cùng một màn hình — với bố cục linh hoạt, modal thêm stream nhanh và phím tắt tiện lợi.
-
-🔗 **Trải nghiệm trực tiếp tại:** [https://mymy123765.github.io](https://mymy123765.github.io)
+🔗 **Trải nghiệm ngay tại:** [https://mymy123765.github.io](https://mymy123765.github.io)
 
 ---
 
-## ✨ Tính năng nổi bật
+## ✨ Tính năng chính
 
-- **Chọn số lượng stream**: Hiển thị **2, 3 hoặc 4** stream cùng lúc qua thanh điều khiển Streams trên toolbar.
-- **Hai chế độ bố cục (Layout)**:
-  - **Equal** — Chia đều không gian cho tất cả các stream.
-  - **Main** — Một stream chính chiếm ưu thế, các stream phụ xếp cột bên cạnh.
-  - *(Layout selector ẩn tự động khi chỉ có 2 streams.)*
-- **Hỗ trợ 3 tùy chọn thêm stream linh hoạt**:
-  - **▶ Dán link YouTube**: Hỗ trợ mọi định dạng (`watch`, `youtu.be`, `shorts`, `live`, mã nhúng `<iframe> embed` và ID video 11 ký tự).
-  - **🪟 Pop-up YouTube**: Mở pop-up duyệt YouTube trực tiếp (hỗ trợ cả tài khoản Google đã đăng nhập lẫn chưa đăng nhập) và nhận diện link nhanh qua Clipboard / Drag & Drop.
-  - **🔗 Direct Stream**: Hỗ trợ các link stream phát trực tiếp trên trình duyệt (`.m3u8`, `.mp4`, `.webm`...).
-- **Lưu trạng thái sau F5 (LocalStorage)**: Giữ nguyên cấu hình và video đã điền; chỉ xóa hoàn toàn khi bấm nút `×` trên từng ô stream.
-- **Kiểm tra trùng lặp & Logic an toàn**: Cảnh báo khi nhập link trùng lặp hoặc khi thu hẹp số màn hình làm ẩn các slot đang có video.
-- **Thông báo xoay ngang thiết bị trên Mobile**: Tự động hiển thị lời nhắc xoay ngang khi dùng thiết bị di động ở chế độ dọc (portrait), tự ẩn khi xoay ngang và tự hiện lại nếu xoay dọc trở lại.
-- **Xóa stream nhanh**: Nút `×` xuất hiện khi hover góc trên phải của từng panel.
-- **Bố cục thích ứng (Responsive)**:
-  - Desktop: CSS Grid tối ưu từng kiểu bố cục.
-  - Mobile: Chuyển sang flex column, 16:9 aspect-ratio, cuộn mượt mà.
-  - Hỗ trợ tai thỏ / Dynamic Island qua `env(safe-area-inset)`.
-- **Chế độ toàn màn hình (Fullscreen)**: Toolbar ẩn, workspace mở rộng tối đa; nút "Thoát toàn màn hình" hiện ở góc dưới phải.
-- **Điều khiển âm thanh đồng bộ**: Mute/Unmute toàn bộ stream cùng lúc qua YouTube Iframe API (`postMessage`).
-- **PWA Ready**: Có `site.webmanifest` — có thể cài đặt như ứng dụng trên điện thoại / máy tính.
-- **Zero Dependencies**: 100% Vanilla HTML, CSS và JavaScript thuần — tải tức thì, không framework.
+* **Chọn số lượng màn hình**: Xem đồng thời **2, 3 hoặc 4** luồng cùng lúc.
+* **Bố cục linh hoạt (Layout)**:
+  * **Equal**: Chia đều kích thước các màn hình.
+  * **Main**: 1 màn hình lớn trung tâm + các màn hình nhỏ bên cạnh.
+* **Đa dạng nguồn phát**:
+  * **Dán link YouTube**: Hỗ trợ link thường, rút gọn, shorts, livestream, mã nhúng `<iframe>` hoặc ID video.
+  * **Pop-up YouTube**: Mở pop-up duyệt YouTube trực tiếp (dùng được cả tài khoản đã đăng nhập lẫn chưa đăng nhập) kèm nút dán nhanh Clipboard & Kéo thả (Drag & Drop).
+  * **Direct Stream**: Hỗ trợ link xem trực tiếp (`.m3u8`, `.mp4`, `.webm`...).
+* **Lưu trạng thái khi F5**: Tự động lưu cấu hình và link đã điền vào trình duyệt; chỉ xóa khi bạn bấm nút `×`.
+* **Tránh lỗi & Trùng lặp**: Tự động chặn dán link trùng nhau và cảnh báo trước khi giảm số màn hình làm ẩn video đang phát.
+* **Tối ưu thiết bị di động (Android & iOS)**:
+  * Tự động hiển thị màn hình khóa yêu cầu xoay ngang thiết bị khi đang cầm dọc.
+  * Tự mở khóa khi xoay ngang và tự khóa lại nếu xoay dọc.
+  * Thanh công cụ thu gọn thông minh ở chế độ ngang để tối đa diện tích video.
+* **Zero Dependencies**: 100% Vanilla HTML, CSS, JavaScript — tải tức thì, chạy mượt mà không cần cài đặt.
 
 ---
 
-## ⌨️ Phím tắt nhanh (Keyboard Shortcuts)
+## ⌨️ Phím tắt nhanh
 
 | Phím tắt | Chức năng |
 | :---: | :--- |
 | <kbd>F</kbd> | Bật / tắt chế độ toàn màn hình (Fullscreen) |
-| <kbd>M</kbd> | Mute / Unmute tất cả các stream đang phát |
-| <kbd>Esc</kbd> | Đóng modal Add Stream **hoặc** thoát toàn màn hình |
-
-*(Phím tắt tự động bị tạm tắt khi bạn đang gõ trong ô nhập liệu của modal.)*
+| <kbd>M</kbd> | Tắt / Bật tiếng (Mute/Unmute) toàn bộ video |
+| <kbd>Esc</kbd> | Đóng hộp thoại thêm link **hoặc** thoát toàn màn hình |
 
 ---
 
-## 🗂️ Bố cục lưới (Grid Layouts)
+## 🚀 Hướng dẫn nhanh
 
-| Số stream | Equal | Main |
-| :---: | :--- | :--- |
-| **2** | 2 cột ngang bằng nhau (layout duy nhất) | — |
-| **3** | 2 trên + 1 giữa dưới | 1 lớn trái + 2 nhỏ xếp phải |
-| **4** | Lưới 2×2 | 1 lớn trái + 3 nhỏ xếp phải |
-
----
-
-## 🚀 Hướng dẫn sử dụng
-
-1. Truy cập [https://mymy123765.github.io](https://mymy123765.github.io).
-2. Chọn số lượng stream (**2 / 3 / 4**) trên thanh toolbar.
-3. Chọn kiểu bố cục (**Equal** hoặc **Main**) nếu dùng 3–4 streams.
-4. Click vào ô trống → Dán URL YouTube hoặc ID video → nhấn **Add Stream**.
-5. Bấm nút `×` (hover vào panel) để xóa stream bất kỳ.
-6. Nhấn <kbd>F</kbd> để vào toàn màn hình, <kbd>M</kbd> để mute/unmute tất cả, <kbd>Esc</kbd> để thoát modal hoặc fullscreen.
+1. Truy cập [mymy123765.github.io](https://mymy123765.github.io).
+2. Chọn số màn hình (**2 / 3 / 4**) và kiểu bố cục (**Equal** hoặc **Main**).
+3. Bấm vào khung trống bất kỳ để thêm video:
+   * **Dán link YouTube** trực tiếp, hoặc
+   * Dùng **Pop-up YouTube** để duyệt và dán từ clipboard, hoặc
+   * Dán link **Direct Stream** (`.m3u8` / `.mp4`).
+4. Bấm dấu `×` góc trên mỗi khung nếu muốn xóa video.
+5. *(Trên điện thoại)*: Xoay ngang màn hình để mở khóa giao diện và thưởng thức.
 
 ---
 
-## 🛠️ Công nghệ xây dựng
+## 📄 Bản quyền
 
-- **HTML5**: Semantic HTML, SEO meta tags, Open Graph, PWA Manifest.
-- **CSS3**: CSS Grid (multi-area layouts), Flexbox, CSS Custom Properties, `env(safe-area-inset)`, `100dvh`.
-- **JavaScript (ES6+)**: Vanilla JS, DOM manipulation, YouTube Iframe API (`postMessage`), `URL` API, Fullscreen API.
-- **Deployment**: GitHub Pages (zero-build, static).
-
----
-
-## 📁 Cấu trúc dự án
-
-```
-mymy123765.github.io/
-├── index.html        # Toàn bộ ứng dụng (HTML + CSS + JS, single-file)
-├── favicon.svg       # Icon SVG
-├── site.webmanifest  # PWA manifest
-├── robots.txt        # SEO robots
-├── sitemap.xml       # SEO sitemap
-└── README.md
-```
-
----
-
-## 📄 Bản quyền (License)
-
-Dự án được phân phối dưới giấy phép [MIT License](LICENSE). Tự do sử dụng, chỉnh sửa và phân phối.
+Phát hành dưới giấy phép [MIT License](LICENSE). Tự do sử dụng và chia sẻ.
