@@ -650,34 +650,6 @@
       line-height: 1.4;
     }
 
-    .quick-tools-row {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .btn-quick-tool {
-      background: transparent;
-      border: 1px solid var(--border-btn);
-      border-radius: 4px;
-      color: var(--text-secondary);
-      font-family: inherit;
-      font-size: 11px;
-      padding: 3px 8px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-    }
-
-    .btn-quick-tool:hover {
-      border-color: var(--border-active);
-      color: #ffffff;
-      background: #0d122b;
-    }
-
     .modal-actions {
       display: flex;
       justify-content: flex-end;
@@ -994,16 +966,6 @@
           <div id="ytPopupStatus" class="yt-popup-status" hidden></div>
         </div>
 
-        <!-- Quick tools row for manual paste mode -->
-        <div id="quickToolsRow" class="quick-tools-row">
-          <button type="button" class="btn-quick-tool" id="btnQuickOpenPopup" title="Mở pop-up YouTube để tìm video">
-            🪟 Mở YouTube
-          </button>
-          <button type="button" class="btn-quick-tool" id="btnQuickPaste" title="Dán nhanh từ Clipboard">
-            📋 Dán nhanh
-          </button>
-        </div>
-
         <label for="streamUrlInput" class="modal-label" id="streamUrlLabel">YouTube Video URL hoặc Video ID</label>
         <input
           type="text"
@@ -1072,9 +1034,6 @@
       const ytPopupStatus       = document.getElementById('ytPopupStatus');
       const btnOpenYtPopup      = document.getElementById('btnOpenYtPopup');
       const btnPasteClipboard   = document.getElementById('btnPasteClipboard');
-      const quickToolsRow       = document.getElementById('quickToolsRow');
-      const btnQuickOpenPopup   = document.getElementById('btnQuickOpenPopup');
-      const btnQuickPaste       = document.getElementById('btnQuickPaste');
 
       // -------------------------------------------------------
       // LocalStorage persistence
@@ -1239,19 +1198,16 @@
 
         if (type === 'direct') {
           ytPopupPanel.hidden = true;
-          quickToolsRow.hidden = true;
           modalLabel.textContent = 'Direct Stream URL';
           modalInput.placeholder = 'https://example.com/stream.m3u8 hoặc .mp4, .webm...';
           modalHint.textContent  = 'Dán trực tiếp link stream mà bạn có thể mở thẳng trên trình duyệt.';
         } else if (type === 'yt_popup') {
           ytPopupPanel.hidden = false;
-          quickToolsRow.hidden = true;
           modalLabel.textContent = 'Link hoặc ID video nhận được từ YouTube';
           modalInput.placeholder = 'Link video sau khi copy từ pop-up YouTube...';
           modalHint.textContent  = 'Bấm "Mở Pop-up YouTube", copy link video rồi bấm "Dán từ Clipboard".';
         } else {
           ytPopupPanel.hidden = true;
-          quickToolsRow.hidden = false;
           modalLabel.textContent = 'YouTube Video URL hoặc Video ID';
           modalInput.placeholder = 'https://www.youtube.com/watch?v=... hoặc ID video';
           modalHint.textContent  = 'Hỗ trợ link watch, youtu.be, live, shorts, mã nhúng embed và ID 11 ký tự.';
@@ -1654,8 +1610,6 @@
       // YouTube Pop-up action buttons
       btnOpenYtPopup.addEventListener('click', openYouTubePopup);
       btnPasteClipboard.addEventListener('click', pasteFromClipboard);
-      btnQuickOpenPopup.addEventListener('click', openYouTubePopup);
-      btnQuickPaste.addEventListener('click', pasteFromClipboard);
 
       // Auto-detect YouTube link on window focus (when user switches back from YouTube popup)
       window.addEventListener('focus', async () => {
