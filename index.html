@@ -1545,6 +1545,7 @@
         streams[activeSlot - 1] = { type: finalType, src };
         saveState();
         closeAddStreamModal();
+        initSilentAudioContext();
         render();
       }
 
@@ -1613,17 +1614,127 @@
           }
           iframe.src = `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(entry.src)}?${params.toString()}`;
         } else {
-          // Direct stream — embed via native <video> in srcdoc for best compatibility
+          // Direct stream — embed via native <video> with auto-recovery & watchdog
           iframe.allow = 'autoplay; fullscreen';
-          const safeUrl = entry.src.replace(/'/g, '%27');
-          iframe.srcdoc = [
-            '<!doctype html><html><head>',
-            '<meta name="viewport" content="width=device-width,initial-scale=1">',
-            '<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:#000}',
-            'video{width:100%;height:100%;object-fit:contain;display:block}</style></head><body>',
-            `<video src='${safeUrl}' autoplay muted playsinline controls></video>`,
-            '</body></html>'
-          ].join('');
+          const safeUrl = entry.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          const mutedAttr = allMuted ? 'muted' : '';
+          iframe.srcdoc = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { width:100%; height:100%; background:#000; overflow:hidden; }
+    video { width:100%; height:100%; object-fit:contain; display:block; }
+  </style>
+</head>
+<body>
+  <video id="streamVideo" src="${safeUrl}" autoplay ${mutedAttr} playsinline controls></video>
+  <script>
+    (function() {
+      var video = document.getElementById('streamVideo');
+      var userPaused = false;
+      var isRecovering = false;
+      var stallCount = 0;
+
+      video.addEventListener('play', function() { userPaused = false; });
+      video.addEventListener('pause', function() {
+        if (!document.hidden) {
+          userPaused = true;
+        }
+      });
+
+      function isLiveStream() {
+        return video.duration === Infinity || isNaN(video.duration) ||
+          (video.seekable && video.seekable.length > 0 && video.seekable.start(0) > 0);
+      }
+
+      function recover(forceReload) {
+        if (userPaused || isRecovering) return;
+        isRecovering = true;
+        try {
+          if (forceReload || video.error || video.networkState === 3) {
+            var curTime = video.currentTime;
+            video.load();
+            if (!isLiveStream() && curTime > 0) {
+              try { video.currentTime = curTime; } catch (_) {}
+            }
+          }
+          if (isLiveStream() && video.seekable && video.seekable.length > 0) {
+            var liveEnd = video.seekable.end(video.seekable.length - 1);
+            if (liveEnd > 0 && (liveEnd - video.currentTime > 5)) {
+              try { video.currentTime = Math.max(0, liveEnd - 0.5); } catch (_) {}
+            }
+          }
+          var p = video.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch(function() {});
+          }
+        } catch (_) {}
+        setTimeout(function() { isRecovering = false; }, 800);
+      }
+
+      setInterval(function() {
+        if (userPaused) return;
+        if (!document.hidden) {
+          if (video.paused) {
+            recover(false);
+          } else if (isLiveStream() && video.seekable && video.seekable.length > 0) {
+            var liveEnd = video.seekable.end(video.seekable.length - 1);
+            if (liveEnd > 0 && (liveEnd - video.currentTime > 14)) {
+              try { video.currentTime = Math.max(0, liveEnd - 1); } catch (_) {}
+            }
+          }
+        }
+      }, 2500);
+
+      video.addEventListener('stalled', function() {
+        if (!userPaused) {
+          stallCount++;
+          if (stallCount >= 2) {
+            recover(true);
+            stallCount = 0;
+          }
+        }
+      });
+
+      video.addEventListener('waiting', function() {
+        if (!userPaused && !document.hidden) {
+          setTimeout(function() {
+            if (video.readyState < 3 && !userPaused) {
+              recover(false);
+            }
+          }, 2500);
+        }
+      });
+
+      video.addEventListener('error', function() {
+        if (!userPaused) {
+          setTimeout(function() { recover(true); }, 1500);
+        }
+      });
+
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && !userPaused) {
+          recover(false);
+        }
+      });
+
+      window.addEventListener('message', function(e) {
+        if (!e || !e.data) return;
+        if (e.data.type === 'multiview_tab_active' || e.data.type === 'multiview_recover') {
+          if (!userPaused) {
+            recover(false);
+          }
+        } else if (e.data.type === 'set_mute') {
+          video.muted = Boolean(e.data.muted);
+        }
+      });
+    })();
+  <\/script>
+</body>
+</html>`;
         }
 
         return iframe;
@@ -1712,9 +1823,81 @@
         iframes.forEach(iframe => {
           if (iframe.dataset.type === 'youtube') {
             sendYouTubeCommand(iframe, allMuted ? 'mute' : 'unMute');
+          } else if (iframe.dataset.type === 'direct' && iframe.contentWindow) {
+            try {
+              iframe.contentWindow.postMessage({ type: 'set_mute', muted: allMuted }, '*');
+            } catch (_) {}
           }
         });
       }
+
+      // -------------------------------------------------------
+      // Background Tab Keep-Alive & Auto-Recovery
+      // Prevents Chromium from throttling/suspending muted streams
+      // -------------------------------------------------------
+      let silentAudioCtx = null;
+
+      function initSilentAudioContext() {
+        try {
+          if (silentAudioCtx) {
+            if (silentAudioCtx.state === 'suspended') {
+              silentAudioCtx.resume().catch(() => {});
+            }
+            return;
+          }
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+
+          silentAudioCtx = new AudioCtx();
+          const buffer = silentAudioCtx.createBuffer(1, silentAudioCtx.sampleRate, silentAudioCtx.sampleRate);
+          const source = silentAudioCtx.createBufferSource();
+          source.buffer = buffer;
+          source.loop = true;
+
+          const gainNode = silentAudioCtx.createGain();
+          gainNode.gain.value = 0.0001;
+          source.connect(gainNode);
+          gainNode.connect(silentAudioCtx.destination);
+          source.start(0);
+
+          if (silentAudioCtx.state === 'suspended') {
+            silentAudioCtx.resume().catch(() => {});
+          }
+
+          if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'playing';
+          }
+        } catch (_) {}
+      }
+
+      function notifyAllStreamsTabActive() {
+        initSilentAudioContext();
+        const iframes = workspace.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+          if (iframe.dataset.type === 'direct' && iframe.contentWindow) {
+            try {
+              iframe.contentWindow.postMessage({ type: 'multiview_tab_active' }, '*');
+            } catch (_) {}
+          }
+        });
+      }
+
+      // Resume audio context on any user interaction
+      ['click', 'keydown', 'touchstart'].forEach(eventType => {
+        window.addEventListener(eventType, () => {
+          initSilentAudioContext();
+        }, { passive: true });
+      });
+
+      // Auto-recover streams when switching back to this tab
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          notifyAllStreamsTabActive();
+        }
+      });
+      window.addEventListener('focus', () => {
+        notifyAllStreamsTabActive();
+      });
 
       // -------------------------------------------------------
       // Fullscreen
