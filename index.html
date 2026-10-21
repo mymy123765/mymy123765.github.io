@@ -1165,6 +1165,8 @@
       const YOUTUBE_ORIGIN = 'https://www.youtube.com';
       const MAX_SLOTS = 4;
       const STORAGE_KEY = 'multiview_state_v2';
+      // hls.js CDN — loaded lazily only when a .m3u8 Direct Stream is added
+      const HLS_CDN = 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
 
       // -------------------------------------------------------
       // State  (streams entries: { type: 'youtube'|'direct', src: string })
@@ -1614,7 +1616,7 @@
           }
           iframe.src = `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(entry.src)}?${params.toString()}`;
         } else {
-          // Direct stream — embed via native <video> with auto-recovery & watchdog
+          // Direct stream: native <video> for mp4/webm, hls.js (MSE) for .m3u8 HLS streams
           iframe.allow = 'autoplay; fullscreen';
           const safeUrl = entry.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
           const mutedAttr = allMuted ? 'muted' : '';
@@ -1624,113 +1626,267 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html, body { width:100%; height:100%; background:#000; overflow:hidden; }
-    video { width:100%; height:100%; object-fit:contain; display:block; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    video { width: 100%; height: 100%; object-fit: contain; display: block; }
+    #err {
+      display: none; position: absolute; inset: 0; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      color: #f87171; font: 13px/1.6 system-ui, sans-serif;
+      padding: 16px; background: rgba(0,0,0,0.88); gap: 4px;
+    }
+    #err.show { display: flex; }
+    #err small { color: #9ca3af; font-size: 11px; }
+    #retryBtn {
+      margin-top: 10px; padding: 5px 14px; border: 1px solid #f87171;
+      border-radius: 5px; background: transparent; color: #f87171;
+      cursor: pointer; font: 12px system-ui; transition: background 0.15s;
+    }
+    #retryBtn:hover { background: rgba(248,113,113,0.15); }
   </style>
 </head>
 <body>
-  <video id="streamVideo" src="${safeUrl}" autoplay ${mutedAttr} playsinline controls></video>
+  <video id="v" ${mutedAttr} playsinline controls></video>
+  <div id="err">
+    <span id="errmsg"></span>
+    <small id="errdetail"></small>
+    <button id="retryBtn" type="button">↺ Thử lại</button>
+  </div>
   <script>
-    (function() {
-      var video = document.getElementById('streamVideo');
+    (function () {
+      'use strict';
+      var SRC        = "${safeUrl}";
+      var IS_HLS     = /\\.m3u8($|[?#])/i.test(SRC);
+      var video      = document.getElementById('v');
+      var errEl      = document.getElementById('err');
+      var errMsg     = document.getElementById('errmsg');
+      var errDtl     = document.getElementById('errdetail');
+      var retryBtn   = document.getElementById('retryBtn');
+      var hls        = null;
       var userPaused = false;
-      var isRecovering = false;
-      var stallCount = 0;
+      var retryCount = 0;
+      var MAX_RETRY  = 8;
+      var stallTimer = null;
+      var recoverLock = false;
 
-      video.addEventListener('play', function() { userPaused = false; });
-      video.addEventListener('pause', function() {
-        if (!document.hidden) {
-          userPaused = true;
-        }
-      });
+      // ── UI helpers ──────────────────────────────────────────
+      function showErr(msg, detail) {
+        errMsg.textContent = msg  || 'Lỗi stream.';
+        errDtl.textContent = detail || '';
+        errEl.classList.add('show');
+      }
+      function hideErr() { errEl.classList.remove('show'); }
 
-      function isLiveStream() {
-        return video.duration === Infinity || isNaN(video.duration) ||
-          (video.seekable && video.seekable.length > 0 && video.seekable.start(0) > 0);
+      // ── Stream helpers ──────────────────────────────────────
+      function isLive() {
+        return video.duration === Infinity || isNaN(video.duration);
       }
 
-      function recover(forceReload) {
-        if (userPaused || isRecovering) return;
-        isRecovering = true;
+      // Seek video to live edge (reduces lag after returning from another tab)
+      function seekToLiveEdge() {
+        if (!isLive()) return;
         try {
-          if (forceReload || video.error || video.networkState === 3) {
-            var curTime = video.currentTime;
-            video.load();
-            if (!isLiveStream() && curTime > 0) {
-              try { video.currentTime = curTime; } catch (_) {}
+          if (video.seekable && video.seekable.length > 0) {
+            var edge = video.seekable.end(video.seekable.length - 1);
+            if (edge > 0 && (edge - video.currentTime) > 3) {
+              video.currentTime = Math.max(0, edge - 0.8);
             }
-          }
-          if (isLiveStream() && video.seekable && video.seekable.length > 0) {
-            var liveEnd = video.seekable.end(video.seekable.length - 1);
-            if (liveEnd > 0 && (liveEnd - video.currentTime > 5)) {
-              try { video.currentTime = Math.max(0, liveEnd - 0.5); } catch (_) {}
-            }
-          }
-          var p = video.play();
-          if (p && typeof p.catch === 'function') {
-            p.catch(function() {});
           }
         } catch (_) {}
-        setTimeout(function() { isRecovering = false; }, 800);
       }
 
-      setInterval(function() {
-        if (userPaused) return;
-        if (!document.hidden) {
-          if (video.paused) {
-            recover(false);
-          } else if (isLiveStream() && video.seekable && video.seekable.length > 0) {
-            var liveEnd = video.seekable.end(video.seekable.length - 1);
-            if (liveEnd > 0 && (liveEnd - video.currentTime > 14)) {
-              try { video.currentTime = Math.max(0, liveEnd - 1); } catch (_) {}
-            }
+      function tryPlay() {
+        hideErr();
+        var p = video.play();
+        if (p && typeof p.catch === 'function') p.catch(function () {});
+      }
+
+      // ── HLS.js — proper MSE-based HLS for Chrome ───────────
+      // Chrome does NOT natively support .m3u8 in <video> inside iframes;
+      // hls.js uses Media Source Extensions (MSE) to decode HLS segments correctly.
+      function initHLS() {
+        if (!window.Hls || !Hls.isSupported()) return;
+        if (hls) { hls.destroy(); hls = null; }
+
+        hls = new Hls({
+          // Live stream tuning — lower latency without sacrificing stability
+          liveSyncDurationCount:        2,
+          liveMaxLatencyDurationCount:  6,
+          // Conservative buffer: keep memory low inside srcdoc iframe
+          maxBufferLength:    12,
+          maxMaxBufferLength: 24,
+          maxBufferSize:      30 * 1024 * 1024,
+          // Performance
+          enableWorker:       true,
+          lowLatencyMode:     false,
+          startFragPrefetch:  true,
+          // Network retry — critical for live streams with packet loss
+          fragLoadingMaxRetry:      8,
+          manifestLoadingMaxRetry:  6,
+          levelLoadingMaxRetry:     6,
+          fragLoadingRetryDelay:    1000,
+          manifestLoadingRetryDelay: 1200,
+          levelLoadingRetryDelay:   1200,
+        });
+
+        hls.loadSource(SRC);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          hideErr();
+          retryCount = 0;
+          tryPlay();
+        });
+
+        hls.on(Hls.Events.ERROR, function (evt, data) {
+          if (!data.fatal) return;
+          if (retryCount >= MAX_RETRY) {
+            showErr('Không thể tải HLS stream.', 'Kiểm tra link và kết nối mạng.');
+            return;
           }
-        }
-      }, 2500);
-
-      video.addEventListener('stalled', function() {
-        if (!userPaused) {
-          stallCount++;
-          if (stallCount >= 2) {
-            recover(true);
-            stallCount = 0;
+          retryCount++;
+          var delay = Math.min(1200 * retryCount, 9000);
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+            setTimeout(function () { if (hls) hls.startLoad(); }, delay);
+          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            hls.recoverMediaError();
+          } else {
+            setTimeout(initHLS, delay);
           }
-        }
+        });
+      }
+
+      function loadHLSLib() {
+        var s    = document.createElement('script');
+        s.src    = '${HLS_CDN}';
+        s.onload = function () {
+          if (window.Hls && Hls.isSupported()) {
+            initHLS();
+          } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // Safari / iOS — native HLS support
+            video.src = SRC;
+            tryPlay();
+          } else {
+            showErr('Trình duyệt không hỗ trợ HLS.', 'Hãy dùng Chrome 80+ hoặc Firefox.');
+          }
+        };
+        s.onerror = function () {
+          // CDN không khả dụng — thử native fallback
+          video.src = SRC;
+          tryPlay();
+        };
+        document.head.appendChild(s);
+      }
+
+      // ── Direct stream (mp4, webm…) ─────────────────────────
+      function initDirect() {
+        video.src = SRC;
+        video.load();
+        tryPlay();
+      }
+
+      function recoverDirect(forceReload) {
+        if (userPaused || recoverLock) return;
+        recoverLock = true;
+        try {
+          if (forceReload || video.networkState === 3 /*NETWORK_NO_SOURCE*/) {
+            video.load();
+          }
+          seekToLiveEdge();
+          tryPlay();
+        } catch (_) {}
+        setTimeout(function () { recoverLock = false; }, 1000);
+      }
+
+      // ── Video events ────────────────────────────────────────
+      video.addEventListener('play',    function () { userPaused = false; hideErr(); });
+      video.addEventListener('playing', function () { clearTimeout(stallTimer); hideErr(); });
+      video.addEventListener('pause',   function () {
+        // Only mark user-paused if the tab is visible (not a background-suspend)
+        if (!document.hidden) userPaused = true;
       });
 
-      video.addEventListener('waiting', function() {
-        if (!userPaused && !document.hidden) {
-          setTimeout(function() {
-            if (video.readyState < 3 && !userPaused) {
-              recover(false);
-            }
-          }, 2500);
-        }
+      // Event-driven recovery for non-HLS streams
+      // (hls.js handles its own recovery internally)
+      if (!IS_HLS) {
+        video.addEventListener('error', function () {
+          if (userPaused) return;
+          clearTimeout(stallTimer);
+          stallTimer = setTimeout(function () {
+            if (!userPaused) recoverDirect(true);
+          }, 2000);
+        });
+
+        video.addEventListener('stalled', function () {
+          if (userPaused) return;
+          clearTimeout(stallTimer);
+          stallTimer = setTimeout(function () {
+            if (!userPaused) recoverDirect(false);
+          }, 3500);
+        });
+
+        video.addEventListener('waiting', function () {
+          if (userPaused) return;
+          clearTimeout(stallTimer);
+          stallTimer = setTimeout(function () {
+            if (!userPaused && video.readyState < 3) recoverDirect(true);
+          }, 4000);
+        });
+      }
+
+      // ── Tab visibility — PRIMARY FIX for post-switch lag ───
+      // When user returns to this tab the live stream has drifted behind.
+      // We immediately seek to the live edge and resume playback.
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) return;
+        // 300 ms delay lets the browser fully restore media pipeline context
+        setTimeout(function () {
+          if (userPaused) return;
+          if (IS_HLS && hls) {
+            // Stop loading stale fragments, jump to live edge, restart
+            hls.stopLoad();
+            seekToLiveEdge();
+            hls.startLoad();
+          } else {
+            seekToLiveEdge();
+          }
+          tryPlay();
+        }, 300);
       });
 
-      video.addEventListener('error', function() {
-        if (!userPaused) {
-          setTimeout(function() { recover(true); }, 1500);
-        }
-      });
-
-      document.addEventListener('visibilitychange', function() {
-        if (!document.hidden && !userPaused) {
-          recover(false);
-        }
-      });
-
-      window.addEventListener('message', function(e) {
+      // ── postMessage from parent page ───────────────────────
+      window.addEventListener('message', function (e) {
         if (!e || !e.data) return;
-        if (e.data.type === 'multiview_tab_active' || e.data.type === 'multiview_recover') {
+        var d = e.data;
+        if (d.type === 'multiview_seeklive') {
+          // Tab became visible — seek to live edge and resume
           if (!userPaused) {
-            recover(false);
+            if (IS_HLS && hls) { hls.stopLoad(); seekToLiveEdge(); hls.startLoad(); }
+            else { seekToLiveEdge(); }
+            tryPlay();
           }
-        } else if (e.data.type === 'set_mute') {
-          video.muted = Boolean(e.data.muted);
+        } else if (d.type === 'multiview_tab_active') {
+          if (!userPaused) tryPlay();
+        } else if (d.type === 'multiview_recover') {
+          if (!userPaused) recoverDirect(true);
+        } else if (d.type === 'set_mute') {
+          video.muted = Boolean(d.muted);
         }
       });
+
+      // ── Retry button ────────────────────────────────────────
+      retryBtn.addEventListener('click', function () {
+        retryCount = 0;
+        if (IS_HLS) initHLS();
+        else recoverDirect(true);
+      });
+
+      // ── Bootstrap ───────────────────────────────────────────
+      if (IS_HLS) {
+        loadHLSLib();
+      } else {
+        initDirect();
+      }
     })();
   <\/script>
 </body>
@@ -1876,7 +2032,8 @@
         iframes.forEach(iframe => {
           if (iframe.dataset.type === 'direct' && iframe.contentWindow) {
             try {
-              iframe.contentWindow.postMessage({ type: 'multiview_tab_active' }, '*');
+              // multiview_seeklive: seek to live edge then resume — fixes tab-switch drift lag
+              iframe.contentWindow.postMessage({ type: 'multiview_seeklive' }, '*');
             } catch (_) {}
           }
         });
