@@ -1167,6 +1167,9 @@
       const STORAGE_KEY = 'multiview_state_v2';
       // hls.js CDN — loaded lazily only when a .m3u8 Direct Stream is added
       const HLS_CDN = 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
+      // mpegts.js CDN — loaded lazily only when a .flv Direct Stream is added
+      // mpegts.js is the maintained successor to flv.js (by Bilibili), supports HTTP-FLV via MSE
+      const FLV_CDN = 'https://cdn.jsdelivr.net/npm/mpegts.js@1/dist/mpegts.min.js';
 
       // -------------------------------------------------------
       // State  (streams entries: { type: 'youtube'|'direct', src: string })
@@ -1369,8 +1372,8 @@
         if (type === 'direct') {
           ytPopupPanel.hidden = true;
           modalLabel.textContent = 'Direct Stream URL';
-          modalInput.placeholder = 'https://example.com/stream.m3u8 hoặc .mp4, .webm...';
-          modalHint.textContent  = 'Dán trực tiếp link stream mà bạn có thể mở thẳng trên trình duyệt.';
+          modalInput.placeholder = 'https://example.com/stream.m3u8, .flv, .mp4, .webm...';
+          modalHint.textContent  = 'Hỗ trợ HLS (.m3u8), HTTP-FLV (.flv), MP4, WebM. Dán link stream mà bạn có thể mở thẳng trên trình duyệt.';
         } else if (type === 'yt_popup') {
           ytPopupPanel.hidden = false;
           modalLabel.textContent = 'Link hoặc ID video nhận được từ YouTube';
@@ -1616,7 +1619,10 @@
           }
           iframe.src = `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(entry.src)}?${params.toString()}`;
         } else {
-          // Direct stream: native <video> for mp4/webm, hls.js (MSE) for .m3u8 HLS streams
+          // Direct stream:
+          //   .m3u8  → HLS.js (MSE)  — lazy-loaded from CDN
+          //   .flv   → mpegts.js (MSE, successor to flv.js) — lazy-loaded from CDN
+          //   others → native <video> (mp4, webm…)
           iframe.allow = 'autoplay; fullscreen';
           const safeUrl = entry.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
           const mutedAttr = allMuted ? 'muted' : '';
@@ -1657,12 +1663,14 @@
       'use strict';
       var SRC        = "${safeUrl}";
       var IS_HLS     = /\\.m3u8($|[?#])/i.test(SRC);
+      var IS_FLV     = /\\.flv($|[?#])/i.test(SRC);
       var video      = document.getElementById('v');
       var errEl      = document.getElementById('err');
       var errMsg     = document.getElementById('errmsg');
       var errDtl     = document.getElementById('errdetail');
       var retryBtn   = document.getElementById('retryBtn');
       var hls        = null;
+      var flvPlayer  = null;
       var userPaused = false;
       var retryCount = 0;
       var MAX_RETRY  = 8;
@@ -1778,6 +1786,69 @@
         document.head.appendChild(s);
       }
 
+      // ── mpegts.js — HTTP-FLV player via MSE ────────────────
+      // mpegts.js (Bilibili) transmuxes HTTP-FLV byte-stream into fMP4 via MSE.
+      // Requires the streaming server to have CORS enabled (Access-Control-Allow-Origin).
+      function initFLV() {
+        if (!window.mpegts || !mpegts.isSupported()) {
+          showErr('Trình duyệt không hỗ trợ FLV qua MSE.', 'Hãy dùng Chrome 80+ hoặc Firefox.');
+          return;
+        }
+        if (flvPlayer) { flvPlayer.destroy(); flvPlayer = null; }
+
+        flvPlayer = mpegts.createPlayer({
+          type: 'flv',
+          isLive: true,
+          url: SRC,
+          cors: true,
+        }, {
+          // Live stream tuning — low latency
+          enableWorker:                 true,
+          liveBufferLatencyChasing:     true,
+          liveBufferLatencyMaxLatency:  3.0,
+          liveBufferLatencyMinRemain:   0.5,
+          // Stash / buffer size conservative for srcdoc iframe
+          stashInitialSize:             256 * 1024,
+          // Network retry
+          enableStashBuffer:            true,
+          autoCleanupSourceBuffer:      true,
+        });
+
+        flvPlayer.attachMediaElement(video);
+        flvPlayer.load();
+        tryPlay();
+
+        flvPlayer.on(mpegts.Events.ERROR, function (errType, errDetail) {
+          if (retryCount >= MAX_RETRY) {
+            showErr('Không thể tải FLV stream.', 'Kiểm tra link, CORS và kết nối mạng.');
+            return;
+          }
+          retryCount++;
+          var delay = Math.min(1500 * retryCount, 10000);
+          setTimeout(function () { initFLV(); }, delay);
+        });
+      }
+
+      function loadFLVLib() {
+        var s    = document.createElement('script');
+        s.src    = '${FLV_CDN}';
+        s.onload = function () {
+          if (window.mpegts && mpegts.isSupported()) {
+            initFLV();
+          } else {
+            // MSE not available (e.g. some older iOS) — try native fallback
+            video.src = SRC;
+            tryPlay();
+          }
+        };
+        s.onerror = function () {
+          // CDN unavailable — try native fallback
+          video.src = SRC;
+          tryPlay();
+        };
+        document.head.appendChild(s);
+      }
+
       // ── Direct stream (mp4, webm…) ─────────────────────────
       function initDirect() {
         video.src = SRC;
@@ -1806,9 +1877,9 @@
         if (!document.hidden) userPaused = true;
       });
 
-      // Event-driven recovery for non-HLS streams
-      // (hls.js handles its own recovery internally)
-      if (!IS_HLS) {
+      // Event-driven recovery for non-HLS, non-FLV streams
+      // (hls.js and mpegts.js handle their own recovery internally)
+      if (!IS_HLS && !IS_FLV) {
         video.addEventListener('error', function () {
           if (userPaused) return;
           clearTimeout(stallTimer);
@@ -1847,10 +1918,15 @@
             hls.stopLoad();
             seekToLiveEdge();
             hls.startLoad();
+          } else if (IS_FLV && flvPlayer) {
+            // Unload and reload to catch up to live edge
+            flvPlayer.unload();
+            flvPlayer.load();
+            tryPlay();
           } else {
             seekToLiveEdge();
+            tryPlay();
           }
-          tryPlay();
         }, 300);
       });
 
@@ -1862,13 +1938,14 @@
           // Tab became visible — seek to live edge and resume
           if (!userPaused) {
             if (IS_HLS && hls) { hls.stopLoad(); seekToLiveEdge(); hls.startLoad(); }
-            else { seekToLiveEdge(); }
-            tryPlay();
+            else if (IS_FLV && flvPlayer) { flvPlayer.unload(); flvPlayer.load(); tryPlay(); }
+            else { seekToLiveEdge(); tryPlay(); }
           }
         } else if (d.type === 'multiview_tab_active') {
           if (!userPaused) tryPlay();
         } else if (d.type === 'multiview_recover') {
-          if (!userPaused) recoverDirect(true);
+          if (IS_FLV) { retryCount = 0; initFLV(); }
+          else if (!userPaused) recoverDirect(true);
         } else if (d.type === 'set_mute') {
           video.muted = Boolean(d.muted);
         }
@@ -1878,12 +1955,15 @@
       retryBtn.addEventListener('click', function () {
         retryCount = 0;
         if (IS_HLS) initHLS();
+        else if (IS_FLV) initFLV();
         else recoverDirect(true);
       });
 
       // ── Bootstrap ───────────────────────────────────────────
       if (IS_HLS) {
         loadHLSLib();
+      } else if (IS_FLV) {
+        loadFLVLib();
       } else {
         initDirect();
       }
