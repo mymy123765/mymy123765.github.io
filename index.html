@@ -1336,13 +1336,12 @@
       // -------------------------------------------------------
       // postMessage helper for YouTube iframes
       // -------------------------------------------------------
-      function sendYouTubeCommand(iframe, func, args = []) {
+      function sendYouTubeCommand(iframe, func) {
         if (!iframe || !iframe.contentWindow) return;
-        try {
-          const payload = JSON.stringify({ event: 'command', func, args });
-          iframe.contentWindow.postMessage(payload, YOUTUBE_ORIGIN);
-          iframe.contentWindow.postMessage(payload, '*');
-        } catch (_) {}
+        iframe.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func, args: [] }),
+          YOUTUBE_ORIGIN
+        );
       }
 
       // -------------------------------------------------------
@@ -1613,8 +1612,9 @@
             rel: '0',
             playsinline: '1'
           });
-          params.set('enablejsapi', '1');
-          if (window.location.origin && window.location.origin.startsWith('http')) {
+          const isWebOrigin = window.location.origin && window.location.origin.startsWith('http');
+          if (isWebOrigin) {
+            params.set('enablejsapi', '1');
             params.set('origin', window.location.origin);
           }
           iframe.src = `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(entry.src)}?${params.toString()}`;
@@ -2110,15 +2110,7 @@
         initSilentAudioContext();
         const iframes = workspace.querySelectorAll('iframe');
         iframes.forEach(iframe => {
-          if (iframe.dataset.type === 'youtube') {
-            // YouTube tab-switch recovery:
-            // 1. Resumes playback in case Chromium suspended the player while inactive
-            sendYouTubeCommand(iframe, 'playVideo');
-            // 2. Re-assert mute state cleanly
-            if (allMuted) {
-              sendYouTubeCommand(iframe, 'mute');
-            }
-          } else if (iframe.dataset.type === 'direct' && iframe.contentWindow) {
+          if (iframe.dataset.type === 'direct' && iframe.contentWindow) {
             try {
               // multiview_seeklive: seek to live edge then resume — fixes tab-switch drift lag
               iframe.contentWindow.postMessage({ type: 'multiview_seeklive' }, '*');
@@ -2138,12 +2130,10 @@
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           notifyAllStreamsTabActive();
-          setTimeout(notifyAllStreamsTabActive, 350);
         }
       });
       window.addEventListener('focus', () => {
         notifyAllStreamsTabActive();
-        setTimeout(notifyAllStreamsTabActive, 350);
       });
 
       // -------------------------------------------------------
