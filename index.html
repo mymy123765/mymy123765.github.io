@@ -2159,25 +2159,61 @@
       }
 
       // -------------------------------------------------------
-      // Stream count change with conflict check
+      // Stream count change with conflict check & auto-compaction
       // -------------------------------------------------------
       function tryChangeStreamCount(newCount) {
         if (newCount === streamCount) return;
 
-        const overflowSlots = [];
-        for (let i = newCount; i < streamCount; i++) {
-          if (streams[i]) overflowSlots.push(i + 1);
-        }
+        // If decreasing stream count:
+        // Automatically compact/shift streams from overflow slots (>= newCount) into earlier empty slots (< newCount)
+        // so users aren't needlessly prompted to delete streams when empty slots are available.
+        if (newCount < streamCount) {
+          const activeStreams = [];
+          for (let i = 0; i < streamCount; i++) {
+            if (streams[i]) activeStreams.push(streams[i]);
+          }
 
-        if (overflowSlots.length > 0) {
-          const slotNames = overflowSlots.join(', ');
-          const confirmed = window.confirm(
-            `Chuyển sang chế độ ${newCount} màn hình sẽ ẩn video ở Slot ${slotNames}.\n` +
-            `Các video này sẽ bị xóa khỏi danh sách. Bạn có chắc chắn không?`
-          );
-          if (!confirmed) return;
-          for (let i = newCount; i < MAX_SLOTS; i++) {
-            streams[i] = null;
+          // If the total number of active streams fits within newCount:
+          // Shift them to slots 0 .. activeStreams.length - 1 without losing any streams.
+          if (activeStreams.length <= newCount) {
+            for (let i = 0; i < MAX_SLOTS; i++) {
+              streams[i] = i < activeStreams.length ? activeStreams[i] : null;
+            }
+          } else {
+            // If total active streams exceed newCount, check which overflow slots would actually be lost
+            // First compact into the first newCount slots to preserve as many as possible
+            for (let i = 0; i < newCount; i++) {
+              if (!streams[i]) {
+                for (let j = newCount; j < streamCount; j++) {
+                  if (streams[j]) {
+                    streams[i] = streams[j];
+                    streams[j] = null;
+                    break;
+                  }
+                }
+              }
+            }
+
+            const overflowSlots = [];
+            for (let i = newCount; i < streamCount; i++) {
+              if (streams[i]) overflowSlots.push(i + 1);
+            }
+
+            if (overflowSlots.length > 0) {
+              const slotNames = overflowSlots.join(', ');
+              const confirmed = window.confirm(
+                `Chuyển sang chế độ ${newCount} màn hình sẽ ẩn video ở Slot ${slotNames}.\n` +
+                `Các video này sẽ bị xóa khỏi danh sách. Bạn có chắc chắn không?`
+              );
+              if (!confirmed) {
+                // Revert any shift by reloading from state if cancelled
+                loadState();
+                return;
+              }
+              for (let i = newCount; i < MAX_SLOTS; i++) {
+                streams[i] = null;
+              }
+            }
           }
         }
 
