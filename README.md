@@ -15,7 +15,7 @@
 * **Đa dạng nguồn phát**:
   * **Dán link YouTube**: Hỗ trợ link thường, rút gọn, shorts, livestream, mã nhúng `<iframe>` hoặc ID video.
   * **Pop-up YouTube**: Mở pop-up duyệt YouTube trực tiếp (dùng được cả tài khoản đã đăng nhập lẫn chưa đăng nhập) kèm nút dán nhanh Clipboard & Kéo thả (Drag & Drop).
-  * **Direct Stream**: Hỗ trợ link xem trực tiếp (`.m3u8`, `.mp4`, `.webm`...).
+  * **Direct Stream**: Hỗ trợ link xem trực tiếp (`.m3u8`, `.flv`, `.mp4`, `.webm`...). Đặc biệt hỗ trợ **ghép kênh âm thanh riêng (Audio M3U8)** cho các luồng truyền hình bị tách rời hình và tiếng (FPT Play, K+...).
 * **Lưu trạng thái khi F5**: Tự động lưu cấu hình và link đã điền vào trình duyệt; chỉ xóa khi bạn bấm nút `×`.
 * **Tránh lỗi & Trùng lặp**: Tự động chặn dán link trùng nhau và cảnh báo trước khi giảm số màn hình làm ẩn video đang phát.
 * **Tối ưu thiết bị di động (Android & iOS)**:
