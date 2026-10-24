@@ -1808,17 +1808,20 @@
         });
 
         var playUrl = SRC;
+        var masterBlobUrl = null;
         if (AUDIO_SRC) {
-          // If separate audio track is provided, synthesize an HLS Master Playlist (RFC 8216)
-          // HLS.js will fetch both video and audio tracks simultaneously, demux, and sync them flawlessly.
+          // RFC 8216 Compliant Master Playlist for demuxed Video + Audio
+          // Needs TYPE=AUDIO with GROUP-ID matching AUDIO attribute in EXT-X-STREAM-INF
+          // CODECS attribute signals both avc1 (video) and mp4a (audio) to ensure MediaSource decoders initialize both tracks
           var m3u8Content =
             '#EXTM3U\n' +
             '#EXT-X-VERSION:3\n' +
-            '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio-main",NAME="Audio",DEFAULT=YES,AUTOSELECT=YES,URI="' + AUDIO_SRC + '"\n' +
-            '#EXT-X-STREAM-INF:BANDWIDTH=6000000,AUDIO="audio-main"\n' +
+            '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio-main",NAME="Main Audio",DEFAULT=YES,AUTOSELECT=YES,URI="' + AUDIO_SRC + '"\n' +
+            '#EXT-X-STREAM-INF:BANDWIDTH=6000000,CODECS="avc1.640028,mp4a.40.2",AUDIO="audio-main"\n' +
             SRC + '\n';
           var blob = new Blob([m3u8Content], { type: 'application/vnd.apple.mpegurl' });
-          playUrl = URL.createObjectURL(blob);
+          masterBlobUrl = URL.createObjectURL(blob);
+          playUrl = masterBlobUrl;
         }
 
         hls.loadSource(playUrl);
@@ -1831,9 +1834,21 @@
         });
 
         hls.on(Hls.Events.ERROR, function (evt, data) {
-          if (!data.fatal) return;
+          var detailStr = (data.details || '') + (data.response && data.response.code ? ' (HTTP ' + data.response.code + ')' : '');
+          if (!data.fatal) {
+            console.warn('[Multiview HLS non-fatal error]:', data.type, detailStr, data);
+            return;
+          }
+          console.error('[Multiview HLS fatal error]:', data.type, detailStr, data);
+
           if (retryCount >= MAX_RETRY) {
-            showErr('Không thể tải HLS stream.', 'Kiểm tra link và kết nối mạng.');
+            var msg = 'Không thể tải HLS stream.';
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              msg = 'Lỗi kết nối hoặc CORS/Token hết hạn.';
+            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              msg = 'Lỗi giải mã dữ liệu media.';
+            }
+            showErr(msg, detailStr || 'Kiểm tra link, token và quyền truy cập CORS của máy chủ phát.');
             return;
           }
           retryCount++;
@@ -1855,8 +1870,20 @@
           if (window.Hls && Hls.isSupported()) {
             initHLS();
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari / iOS — native HLS support
-            video.src = SRC;
+            // Safari / iOS fallback (when MSE is unsupported e.g. iOS WebKit)
+            if (AUDIO_SRC) {
+              // Master playlist blob for Safari native HLS
+              var safariMaster =
+                '#EXTM3U\n' +
+                '#EXT-X-VERSION:3\n' +
+                '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio-main",NAME="Main Audio",DEFAULT=YES,AUTOSELECT=YES,URI="' + AUDIO_SRC + '"\n' +
+                '#EXT-X-STREAM-INF:BANDWIDTH=6000000,CODECS="avc1.640028,mp4a.40.2",AUDIO="audio-main"\n' +
+                SRC + '\n';
+              var blob = new Blob([safariMaster], { type: 'application/vnd.apple.mpegurl' });
+              video.src = URL.createObjectURL(blob);
+            } else {
+              video.src = SRC;
+            }
             tryPlay();
           } else {
             showErr('Trình duyệt không hỗ trợ HLS.', 'Hãy dùng Chrome 80+ hoặc Firefox.');
