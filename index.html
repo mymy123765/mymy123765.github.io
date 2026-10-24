@@ -650,28 +650,6 @@
       line-height: 1.4;
     }
 
-    .direct-audio-group {
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px dashed rgba(41, 57, 81, 0.6);
-    }
-
-    .direct-audio-group label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .badge-optional {
-      font-size: 11px;
-      font-weight: 500;
-      color: #93c5fd;
-      background: rgba(59, 92, 184, 0.2);
-      border: 1px solid rgba(59, 92, 184, 0.35);
-      border-radius: 4px;
-      padding: 1px 6px;
-    }
-
     .modal-actions {
       display: flex;
       justify-content: flex-end;
@@ -1166,24 +1144,6 @@
           spellcheck="false"
         >
         <p class="modal-hint" id="streamUrlHint">Hỗ trợ link watch, youtu.be, live, shorts, mã nhúng embed và ID 11 ký tự.</p>
-
-        <!-- Direct Stream Audio Track (optional, for demuxed streams with separate audio) -->
-        <div id="directAudioGroup" class="direct-audio-group" hidden>
-          <label for="streamAudioInput" class="modal-label" id="streamAudioLabel">
-            <span>Audio Stream URL</span>
-            <span class="badge-optional">Tùy chọn ghép tiếng</span>
-          </label>
-          <input
-            type="text"
-            id="streamAudioInput"
-            class="modal-input"
-            placeholder="https://...audio.m3u8 (bỏ trống nếu video đã có sẵn âm thanh)"
-            autocomplete="off"
-            spellcheck="false"
-          >
-          <p class="modal-hint" id="streamAudioHint">Dùng cho luồng HLS (.m3u8) bị tách rời hình và tiếng (như FPT Play, K+...).</p>
-        </div>
-
         <p class="modal-error" id="streamUrlError" role="alert" aria-live="polite"></p>
         <div class="modal-actions">
           <button type="button" class="btn-modal btn-cancel" id="modalCancelBtn">Hủy</button>
@@ -1234,8 +1194,6 @@
       const modalInput          = document.getElementById('streamUrlInput');
       const modalLabel          = document.getElementById('streamUrlLabel');
       const modalHint           = document.getElementById('streamUrlHint');
-      const directAudioGroup    = document.getElementById('directAudioGroup');
-      const modalAudioInput     = document.getElementById('streamAudioInput');
       const modalError          = document.getElementById('streamUrlError');
       const modalCloseBtn       = document.getElementById('modalCloseBtn');
       const modalCancelBtn      = document.getElementById('modalCancelBtn');
@@ -1366,16 +1324,11 @@
       // -------------------------------------------------------
       // Duplicate detection
       // -------------------------------------------------------
-      function findDuplicateSlot(type, src, excludeSlot, audioSrc) {
-        const normAudio = (audioSrc || '').trim();
+      function findDuplicateSlot(type, src, excludeSlot) {
         for (let i = 0; i < MAX_SLOTS; i++) {
           if (i + 1 === excludeSlot) continue;
           const s = streams[i];
-          if (!s || s.type !== type) continue;
-          if (s.src === src) {
-            const sAudio = (s.audioSrc || '').trim();
-            if (sAudio === normAudio) return i + 1;
-          }
+          if (s && s.type === type && s.src === src) return i + 1;
         }
         return null;
       }
@@ -1418,19 +1371,16 @@
 
         if (type === 'direct') {
           ytPopupPanel.hidden = true;
-          directAudioGroup.hidden = false;
-          modalLabel.textContent = 'Direct Stream URL (Video)';
+          modalLabel.textContent = 'Direct Stream URL';
           modalInput.placeholder = 'https://example.com/stream.m3u8, .flv, .mp4, .webm...';
           modalHint.textContent  = 'Hỗ trợ HLS (.m3u8), HTTP-FLV (.flv), MP4, WebM. Dán link stream mà bạn có thể mở thẳng trên trình duyệt.';
         } else if (type === 'yt_popup') {
           ytPopupPanel.hidden = false;
-          directAudioGroup.hidden = true;
           modalLabel.textContent = 'Link hoặc ID video nhận được từ YouTube';
           modalInput.placeholder = 'Link video sau khi copy từ pop-up YouTube...';
           modalHint.textContent  = 'Bấm "Mở Pop-up YouTube", copy link video rồi bấm "Dán từ Clipboard".';
         } else {
           ytPopupPanel.hidden = true;
-          directAudioGroup.hidden = true;
           modalLabel.textContent = 'YouTube Video URL hoặc Video ID';
           modalInput.placeholder = 'https://www.youtube.com/watch?v=... hoặc ID video';
           modalHint.textContent  = 'Hỗ trợ link watch, youtu.be, live, shorts, mã nhúng embed và ID 11 ký tự.';
@@ -1537,13 +1487,9 @@
         if (existing) {
           setLinkType(existing.type === 'direct' ? 'direct' : 'youtube');
           modalInput.value = existing.src || '';
-          if (modalAudioInput) {
-            modalAudioInput.value = (existing.type === 'direct' && existing.audioSrc) ? existing.audioSrc : '';
-          }
         } else {
           setLinkType('youtube');
           modalInput.value = '';
-          if (modalAudioInput) modalAudioInput.value = '';
         }
         clearModalError();
         clearPopupStatus();
@@ -1578,7 +1524,6 @@
         }
 
         let src = null;
-        let audioSrc = null;
 
         if (finalType === 'youtube') {
           const videoId = getVideoId(rawValue);
@@ -1593,28 +1538,16 @@
             return;
           }
           src = rawValue;
-
-          const rawAudio = (modalAudioInput && modalAudioInput.value) ? modalAudioInput.value.trim() : '';
-          if (rawAudio) {
-            if (!isValidDirectUrl(rawAudio)) {
-              showModalError('Audio URL không hợp lệ. Vui lòng nhập đường dẫn HTTP/HTTPS đầy đủ.');
-              return;
-            }
-            audioSrc = rawAudio;
-          }
         }
 
         // Duplicate check
-        const dupSlot = findDuplicateSlot(finalType, src, activeSlot, audioSrc);
+        const dupSlot = findDuplicateSlot(finalType, src, activeSlot);
         if (dupSlot !== null) {
           showModalError(`Link này đã được sử dụng ở Slot ${dupSlot}. Vui lòng chọn link khác.`);
           return;
         }
 
-        const streamEntry = { type: finalType, src };
-        if (audioSrc) streamEntry.audioSrc = audioSrc;
-
-        streams[activeSlot - 1] = streamEntry;
+        streams[activeSlot - 1] = { type: finalType, src };
         saveState();
         closeAddStreamModal();
         initSilentAudioContext();
@@ -1664,13 +1597,12 @@
        */
       function buildIframe(entry, slotIndex) {
         const iframe = document.createElement('iframe');
-        iframe.dataset.videoId  = entry.src;
-        iframe.dataset.audioSrc = entry.audioSrc || '';
-        iframe.dataset.type     = entry.type;
-        iframe.referrerPolicy   = 'strict-origin-when-cross-origin';
-        iframe.allowFullscreen  = true;
-        iframe.loading          = 'eager';
-        iframe.title            = `Stream ${slotIndex + 1}`;
+        iframe.dataset.videoId = entry.src;
+        iframe.dataset.type    = entry.type;
+        iframe.referrerPolicy  = 'strict-origin-when-cross-origin';
+        iframe.allowFullscreen = true;
+        iframe.loading         = 'eager';
+        iframe.title           = `Stream ${slotIndex + 1}`;
 
         if (entry.type === 'youtube') {
           iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
@@ -1688,12 +1620,11 @@
           iframe.src = `${YOUTUBE_ORIGIN}/embed/${encodeURIComponent(entry.src)}?${params.toString()}`;
         } else {
           // Direct stream:
-          //   .m3u8  → HLS.js (MSE)  — lazy-loaded from CDN (supports dual video+audio demuxed streams)
+          //   .m3u8  → HLS.js (MSE)  — lazy-loaded from CDN
           //   .flv   → mpegts.js (MSE, successor to flv.js) — lazy-loaded from CDN
           //   others → native <video> (mp4, webm…)
           iframe.allow = 'autoplay; fullscreen';
-          const safeUrl   = entry.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          const safeAudio = (entry.audioSrc || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          const safeUrl = entry.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
           const mutedAttr = allMuted ? 'muted' : '';
           iframe.srcdoc = `<!doctype html>
 <html>
@@ -1731,8 +1662,7 @@
     (function () {
       'use strict';
       var SRC        = "${safeUrl}";
-      var AUDIO_SRC  = "${safeAudio}";
-      var IS_HLS     = /\\.m3u8($|[?#])/i.test(SRC) || (AUDIO_SRC && /\\.m3u8($|[?#])/i.test(AUDIO_SRC));
+      var IS_HLS     = /\\.m3u8($|[?#])/i.test(SRC);
       var IS_FLV     = /\\.flv($|[?#])/i.test(SRC);
       var video      = document.getElementById('v');
       var errEl      = document.getElementById('err');
@@ -1807,24 +1737,7 @@
           levelLoadingRetryDelay:   1200,
         });
 
-        var playUrl = SRC;
-        var masterBlobUrl = null;
-        if (AUDIO_SRC) {
-          // RFC 8216 Compliant Master Playlist for demuxed Video + Audio
-          // Needs TYPE=AUDIO with GROUP-ID matching AUDIO attribute in EXT-X-STREAM-INF
-          // CODECS attribute signals both avc1 (video) and mp4a (audio) to ensure MediaSource decoders initialize both tracks
-          var m3u8Content =
-            '#EXTM3U\n' +
-            '#EXT-X-VERSION:3\n' +
-            '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio-main",NAME="Main Audio",DEFAULT=YES,AUTOSELECT=YES,URI="' + AUDIO_SRC + '"\n' +
-            '#EXT-X-STREAM-INF:BANDWIDTH=6000000,CODECS="avc1.640028,mp4a.40.2",AUDIO="audio-main"\n' +
-            SRC + '\n';
-          var blob = new Blob([m3u8Content], { type: 'application/vnd.apple.mpegurl' });
-          masterBlobUrl = URL.createObjectURL(blob);
-          playUrl = masterBlobUrl;
-        }
-
-        hls.loadSource(playUrl);
+        hls.loadSource(SRC);
         hls.attachMedia(video);
 
         hls.on(Hls.Events.MANIFEST_PARSED, function () {
@@ -1834,21 +1747,9 @@
         });
 
         hls.on(Hls.Events.ERROR, function (evt, data) {
-          var detailStr = (data.details || '') + (data.response && data.response.code ? ' (HTTP ' + data.response.code + ')' : '');
-          if (!data.fatal) {
-            console.warn('[Multiview HLS non-fatal error]:', data.type, detailStr, data);
-            return;
-          }
-          console.error('[Multiview HLS fatal error]:', data.type, detailStr, data);
-
+          if (!data.fatal) return;
           if (retryCount >= MAX_RETRY) {
-            var msg = 'Không thể tải HLS stream.';
-            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-              msg = 'Lỗi kết nối hoặc CORS/Token hết hạn.';
-            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-              msg = 'Lỗi giải mã dữ liệu media.';
-            }
-            showErr(msg, detailStr || 'Kiểm tra link, token và quyền truy cập CORS của máy chủ phát.');
+            showErr('Không thể tải HLS stream.', 'Kiểm tra link và kết nối mạng.');
             return;
           }
           retryCount++;
@@ -1870,20 +1771,8 @@
           if (window.Hls && Hls.isSupported()) {
             initHLS();
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari / iOS fallback (when MSE is unsupported e.g. iOS WebKit)
-            if (AUDIO_SRC) {
-              // Master playlist blob for Safari native HLS
-              var safariMaster =
-                '#EXTM3U\n' +
-                '#EXT-X-VERSION:3\n' +
-                '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio-main",NAME="Main Audio",DEFAULT=YES,AUTOSELECT=YES,URI="' + AUDIO_SRC + '"\n' +
-                '#EXT-X-STREAM-INF:BANDWIDTH=6000000,CODECS="avc1.640028,mp4a.40.2",AUDIO="audio-main"\n' +
-                SRC + '\n';
-              var blob = new Blob([safariMaster], { type: 'application/vnd.apple.mpegurl' });
-              video.src = URL.createObjectURL(blob);
-            } else {
-              video.src = SRC;
-            }
+            // Safari / iOS — native HLS support
+            video.src = SRC;
             tryPlay();
           } else {
             showErr('Trình duyệt không hỗ trợ HLS.', 'Hãy dùng Chrome 80+ hoặc Firefox.');
@@ -2119,13 +2008,7 @@
             panel.classList.add('has-video');
 
             let iframe = existingIframes[String(i)];
-            const currentAudio = entry.audioSrc || '';
-            if (
-              !iframe ||
-              iframe.dataset.videoId !== entry.src ||
-              iframe.dataset.type !== entry.type ||
-              (iframe.dataset.audioSrc || '') !== currentAudio
-            ) {
+            if (!iframe || iframe.dataset.videoId !== entry.src || iframe.dataset.type !== entry.type) {
               iframe = buildIframe(entry, slotIndex);
             }
 
@@ -2395,9 +2278,6 @@
 
       // Live validation on input (clear error while typing)
       modalInput.addEventListener('input', clearModalError);
-      if (modalAudioInput) {
-        modalAudioInput.addEventListener('input', clearModalError);
-      }
 
       // Stream count selector
       streamCountButtons.forEach(btn => {
